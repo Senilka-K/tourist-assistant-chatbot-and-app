@@ -1,4 +1,5 @@
 import {
+  Dimensions,
   StyleSheet,
   Text,
   View,
@@ -12,12 +13,15 @@ import {
 } from "react-native";
 import { useState } from "react";
 
+const screenWidth = Dimensions.get("window").width;
+
 export default function ApplicationForm() {
   const [name, setName] = useState("");
   const [arriveDate, setArriveDate] = useState("");
   const [district, setDistrict] = useState("");
   const [contactNo, setContactNo] = useState("");
   const [passportId, setPassportId] = useState("");
+  const [emergencyNo, setEmergencyNo] = useState("");
   const [comment, setComment] = useState("");
   const [likesTracking, setLikesTracking] = useState(null);
   const [errors, setErrors] = useState({});
@@ -115,6 +119,16 @@ export default function ApplicationForm() {
             {errors.passportId ? (
               <Text style={styles.errorText}>{errors.passportId}</Text>
             ) : null}
+            <Text style={styles.label}>Emergency No:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your Emergency No"
+              value={emergencyNo}
+              onChangeText={setEmergencyNo}
+            />
+            {errors.emergencyNo ? (
+              <Text style={styles.errorText}>{errors.emergencyNo}</Text>
+            ) : null}
             <Text style={styles.label}>Comment:</Text>
             <TextInput
               style={styles.input}
@@ -185,12 +199,13 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 24,
     fontWeight: "bold",
+    paddingTop: 20,
     marginBottom: 16,
   },
   form: {
     backgroundColor: "white",
     padding: 20,
-    width: 300,
+    width: screenWidth - 50,
     borderRadius: 10,
     shadowColor: "black",
     shadowOffset: {

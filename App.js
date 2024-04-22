@@ -33,8 +33,18 @@ export default function App() {
             }}
           />
           <Tab.Screen
-            name="Location"
+            name="Application"
             component={ApplicationForm}
+            options={{
+              tabBarLabel: "Application",
+              tabBarIcon: ({ color }) => (
+                <Ionicons name="apps-outline" size={20} color={color} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Location"
+            component={Location}
             options={{
               tabBarLabel: "Your Location",
               tabBarIcon: ({ color }) => (

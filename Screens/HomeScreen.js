@@ -5,12 +5,15 @@ import {
   Text,
   View,
   Button,
+  Dimensions,
   TextInput,
   KeyboardAvoidingView,
   TouchableOpacity,
   Platform,
 } from "react-native";
 import { Colors } from "react-native/Libraries/NewAppScreen";
+
+const screenWidth = Dimensions.get("window").width;
 
 export default function HomeScreen({ navigation }) {
   const [username, setUsername] = useState("");
@@ -47,7 +50,6 @@ export default function HomeScreen({ navigation }) {
       keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       style={styles.container}
     >
-      <Text style={styles.text}>Home</Text>
       <View style={styles.form}>
         <Text style={styles.label}>Username</Text>
         <TextInput
@@ -92,7 +94,7 @@ const styles = StyleSheet.create({
   form: {
     backgroundColor: "white",
     padding: 20,
-    width: 300,
+    width: screenWidth - 70,
     borderRadius: 10,
     shadowColor: "black",
     shadowOffset: {

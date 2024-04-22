@@ -2,7 +2,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../tourist-assistant-chatbot-and-app/Screens/HomeScreen";
-import Location from "../tourist-assistant-chatbot-and-app/Screens/Location";
+import MapScreen from "../tourist-assistant-chatbot-and-app/Screens/Location";
 import ChatBot from "../tourist-assistant-chatbot-and-app/Screens/ChatBot";
 import ApplicationForm from "./Screens/ApplicationForm";
 import LanguageSelectionScreen from "./Screens/LanguageSelectionScreen";
@@ -44,7 +44,7 @@ export default function App() {
           />
           <Tab.Screen
             name="Location"
-            component={Location}
+            component={MapScreen}
             options={{
               tabBarLabel: "Your Location",
               tabBarIcon: ({ color }) => (

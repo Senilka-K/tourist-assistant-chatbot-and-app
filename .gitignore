@@ -2,11 +2,13 @@
 
 # dependencies
 node_modules/
+.vscode/
 
 # Expo
 .expo/
 dist/
 web-build/
+%ProgramData%/
 
 # Native
 *.orig.*

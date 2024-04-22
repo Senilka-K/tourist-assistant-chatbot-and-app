@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, Button, TextInput, KeyboardAvoidingView, Platform} from 'react-native';
 
+
 export default function Location() {
     return(
         <View style={styles.container}>

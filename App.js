@@ -1,11 +1,12 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import HomeScreen from "../myproject/Screens/HomeScreen";
-import Location from "../myproject/Screens/Location";
-import ChatBot from "../myproject/Screens/ChatBot";
+import HomeScreen from "../tourist-assistant-chatbot-and-app/Screens/HomeScreen";
+import Location from "../tourist-assistant-chatbot-and-app/Screens/Location";
+import ChatBot from "../tourist-assistant-chatbot-and-app/Screens/ChatBot";
+import ApplicationForm from './Screens/ApplicationForm';
 import Ionicons from "@expo/vector-icons/Ionicons"
-
+// Screens\HomeScreen.jsC:\Users\nadil\OneDrive\Documents\Senilka\tourist-assistant-chatbot-and-app\tourist-assistant-chatbot-and-app\Screens\ChatBot.js
 
 const Tab = createBottomTabNavigator()
 
@@ -21,7 +22,7 @@ export default function App () {
           tabBarLabel: "Home Page",
           tabBarIcon: ( {color} ) => <Ionicons name='home' size={20} color={color} />
         }}/>
-        <Tab.Screen name='Location' component={Location}  options={{
+        <Tab.Screen name='Location' component={ApplicationForm}  options={{
           tabBarLabel: "Your Location",
           tabBarIcon: ( {color} ) => <Ionicons name='location' size={20} color={color} />
         }}/>
@@ -31,7 +32,6 @@ export default function App () {
         }}/>
       </Tab.Navigator>
     </NavigationContainer>
-    // <smcs?
   )
 }
 

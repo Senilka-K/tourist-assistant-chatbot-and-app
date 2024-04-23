@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Dimensions, TouchableOpacity, Alert, Linking } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Dimensions,
+  TouchableOpacity,
+  Alert,
+  Linking,
+} from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 
@@ -12,8 +20,9 @@ const MapScreen = ({ route }) => {
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
-  const [showEmergencyOptions, setShowEmergencyOptions] = useState(false);
-//   const { emergencyNo } = route.params; // assuming emergencyNo is passed via navigation params
+
+  const [isEmergencyDeclared, setIsEmergencyDeclared] = useState(false);
+  //   const { emergencyNo } = route.params; // assuming emergencyNo is passed via navigation params
 
   useEffect(() => {
     (async () => {
@@ -34,23 +43,51 @@ const MapScreen = ({ route }) => {
     })();
   }, []);
 
-  const handleEmergency = () => {
-    Alert.alert("Emergency Declared", "Your emergency has been declared!", [{ text: "OK" }]);
-    setShowEmergencyOptions(true);
+  const handleEmergencyToggle = () => {
+    if (isEmergencyDeclared) {
+      // Ask user if they really want to cancel the emergency
+      Alert.alert(
+        "Cancel Emergency",
+        "Are you sure you want to cancel the emergency?",
+        [
+          {
+            text: "No",
+            onPress: () => console.log("Cancel Cancelled"),
+            style: "cancel",
+          },
+          {
+            text: "Yes",
+            onPress: () => {
+              console.log("Emergency Cancelled");
+              setIsEmergencyDeclared(false);
+              Alert.alert(
+                "Emergency Cancelled",
+                "Your emergency has been cancelled."
+              );
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert("Emergency Declared", "Your emergency has been declared!", [
+        { text: "OK" },
+      ]);
+      setIsEmergencyDeclared(true);
+    }
   };
 
-//   const handleEmergencyCall = () => {
-//     const url = `tel:${emergencyNo}`;
-//     Linking.canOpenURL(url)
-//       .then((supported) => {
-//         if (!supported) {
-//           Alert.alert("Phone call not supported");
-//         } else {
-//           return Linking.openURL(url);
-//         }
-//       })
-//       .catch((err) => console.error('An error occurred', err));
-//   };
+  //   const handleEmergencyCall = () => {
+  //     const url = `tel:${emergencyNo}`;
+  //     Linking.canOpenURL(url)
+  //       .then((supported) => {
+  //         if (!supported) {
+  //           Alert.alert("Phone call not supported");
+  //         } else {
+  //           return Linking.openURL(url);
+  //         }
+  //       })
+  //       .catch((err) => console.error('An error occurred', err));
+  //   };
 
   const handleEmergencyMessage = () => {
     Alert.prompt(
@@ -60,8 +97,8 @@ const MapScreen = ({ route }) => {
         { text: "Cancel", style: "cancel" },
         {
           text: "Send",
-          onPress: message => console.log('Emergency message:', message)
-        }
+          onPress: (message) => console.log("Emergency message:", message),
+        },
       ],
       "plain-text"
     );
@@ -82,15 +119,23 @@ const MapScreen = ({ route }) => {
         )}
       </MapView>
       {errorMsg && <Text>{errorMsg}</Text>}
-      <TouchableOpacity style={styles.actionButton} onPress={handleEmergency}>
-        <Text style={styles.actionButtonText}>Declare Emergency</Text>
+      <TouchableOpacity
+        style={styles.actionButton}
+        onPress={handleEmergencyToggle}
+      >
+        <Text style={styles.actionButtonText}>
+          {isEmergencyDeclared ? "Cancel Emergency" : "Declare Emergency"}
+        </Text>
       </TouchableOpacity>
-      {showEmergencyOptions && (
+      {isEmergencyDeclared && (
         <View style={styles.emergencyOptions}>
           <TouchableOpacity style={styles.optionButton}>
             <Text style={styles.optionButtonText}>Emergency Call</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.optionButton} onPress={handleEmergencyMessage}>
+          <TouchableOpacity
+            style={styles.optionButton}
+            onPress={handleEmergencyMessage}
+          >
             <Text style={styles.optionButtonText}>Emergency Message</Text>
           </TouchableOpacity>
         </View>
@@ -128,9 +173,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   emergencyOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
     padding: 20,
   },
   optionButton: {
@@ -138,14 +183,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 5,
-    width: '40%',
-    alignItems: 'center',
+    width: "40%",
+    alignItems: "center",
   },
   optionButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 

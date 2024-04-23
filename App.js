@@ -1,11 +1,12 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import HomeScreen from "../tourist-assistant-chatbot-and-app/Screens/HomeScreen";
-import MapScreen from "../tourist-assistant-chatbot-and-app/Screens/Location";
-import ChatBot from "../tourist-assistant-chatbot-and-app/Screens/ChatBot";
+import HomeScreen from "./Screens/HomeScreen";
+import MapScreen from "./Screens/Location";
+import ChatBot from "./Screens/ChatBot";
 import ApplicationForm from "./Screens/ApplicationForm";
 import LanguageSelectionScreen from "./Screens/LanguageSelectionScreen";
+import Police from "./Screens/Police";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LanguageProvider } from "./LanguageContext";
 
@@ -49,6 +50,16 @@ export default function App() {
               tabBarLabel: "Your Location",
               tabBarIcon: ({ color }) => (
                 <Ionicons name="location" size={20} color={color} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Police"
+            component={Police}
+            options={{
+              tabBarLabel: "Police",
+              tabBarIcon: ({ color }) => (
+                <Ionicons name="shield-checkmark-outline" size={20} color={color} />
               ),
             }}
           />

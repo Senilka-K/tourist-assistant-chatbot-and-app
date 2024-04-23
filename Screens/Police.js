@@ -55,9 +55,9 @@ const Police = () => {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.item} onPress={() => focusOnLocation(item.latitude, item.longitude)}>
-      <Text style={styles.title}>{`Emergency declared by ${item.user}`}</Text>
-      <Text>{`Location: ${item.description}`}</Text>
-      <Text>{`Message: ${item.message}`}</Text>
+      <Text style={styles.title}>{`Emergency Declared by ${item.user}`}</Text>
+      <Text style={styles.itemText}>{`Location: ${item.description}`}</Text>
+      <Text style={styles.itemText}>{`Message: ${item.message}`}</Text>
     </TouchableOpacity>
   );
 
@@ -100,15 +100,22 @@ const styles = StyleSheet.create({
     height: Dimensions.get('window').height / 2,
   },
   item: {
-    backgroundColor: '#FEDFC2',
+    backgroundColor: 'red',
     padding: 20,
     marginVertical: 8,
     marginHorizontal: 16,
     borderRadius: 5,
   },
+  itemText: {
+    paddingTop: 10,
+    color: "white",
+    fontSize: 18,
+  },
   title: {
+    color: "white",
     fontSize: 20,
     fontWeight: 'bold',
+    textAlign: "center",
   },
 });
 

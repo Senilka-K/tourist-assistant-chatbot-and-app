@@ -19,12 +19,12 @@ export default function HomeScreen({ navigation }) {
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState({});
   const [loginSuccess, setLoginSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
     let errors = {};
 
     if (!username) errors.username = "Username is required";
-    //   if (!password) errors.password = "Password is required";
 
     setErrors(errors);
 
@@ -43,6 +43,70 @@ export default function HomeScreen({ navigation }) {
       setLoginSuccess(""); // Clear success message if login fails
     }
   };
+
+  // const handleLogin = async () => {
+  //   try {
+  //     const response = await fetch('http://localhost:5000/login', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ username }),
+  //     });
+
+  //     const data = await response.json();
+  //     if (response.status === 200) {
+  //       setLoginSuccess(data.message);
+  //       setUsername("");
+  //       setErrors({});
+  //     } else {
+  //       setErrors({ username: data.message });
+  //       setLoginSuccess("");
+  //     }
+  //   } catch (error) {
+  //     Alert.alert("Error", "Unable to connect to server");
+  //   }
+  // };
+
+  // const handleSubmit = () => {
+  //   if (validateForm()) {
+  //     handleLogin();
+  //   } else {
+  //     setLoginSuccess("");
+  //   }
+  // };
+
+  // const handleLogin = async () => {
+  //   if (!validateForm()) {
+  //     setLoginSuccess("");
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await fetch('http://localhost:5000/login', {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ username }),
+  //     });
+
+  //     const data = await response.json();
+  //     if (response.status === 200) {
+  //       setLoginSuccess(data.message);
+  //       setUsername("");
+  //       setErrors({});
+  //     } else {
+  //       setErrors({ username: data.message });
+  //       setLoginSuccess("");
+  //     }
+  //   } catch (error) {
+  //     Alert.alert("Error", "Unable to connect to server");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   return (
     <KeyboardAvoidingView
@@ -70,6 +134,17 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity style={styles.actionButton} onPress={handleSubmit}>
             <Text style={styles.actionButtonText}>Login</Text>
           </TouchableOpacity>
+          {/* <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.actionButtonText}>Login</Text>
+            )}
+          </TouchableOpacity> */}
         </View>
       </View>
       {loginSuccess && <Text style={styles.successText}>{loginSuccess}</Text>}
@@ -109,7 +184,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 20,
     fontWeight: "bold",
-    textAlign: "center"
+    textAlign: "center",
   },
   input: {
     height: 40,

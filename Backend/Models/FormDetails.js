@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const formDetailsSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },  // Reference to the User model
+  userId: { type: String, required: true },
   name: { type: String, required: true },
   arriveDate: { type: String, required: true },
   district: { type: String, required: true },

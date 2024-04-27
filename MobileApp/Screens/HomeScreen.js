@@ -9,9 +9,11 @@ import {
   TextInput,
   KeyboardAvoidingView,
   TouchableOpacity,
+  Alert,
   Platform,
 } from "react-native";
 import { Colors } from "react-native/Libraries/NewAppScreen";
+import { storeUserId } from "../UserIdStore";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -19,7 +21,6 @@ export default function HomeScreen({ navigation }) {
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState({});
   const [loginSuccess, setLoginSuccess] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
     let errors = {};
@@ -27,86 +28,39 @@ export default function HomeScreen({ navigation }) {
     if (!username) errors.username = "Username is required";
 
     setErrors(errors);
-
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => { 
     if (validateForm()) {
-      console.log("Login Successful", username);
-      setLoginSuccess(`${username} logged in successfully`);
-      // Resetting the form states
-      setUsername("");
-      // setPassword("");
-      setErrors({});
+      try {
+        const response = await fetch('https://piglet-vital-alien.ngrok-free.app/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username })
+        });
+
+        const data = await response.json();
+
+        if (response.status === 200) {
+          setLoginSuccess(`${username} logged in successfully`);
+          storeUserId(data.user);
+          setUsername("");
+          setErrors({});
+        } else {
+          setLoginSuccess("");
+          Alert.alert("Login Failed", data.message);
+        }
+      } catch (error) {
+        setLoginSuccess("");
+        Alert.alert("Network Error", "Unable to connect to server");
+      }
     } else {
-      setLoginSuccess(""); // Clear success message if login fails
+      setLoginSuccess("");
     }
   };
-
-  // const handleLogin = async () => {
-  //   try {
-  //     const response = await fetch('http://localhost:5000/login', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ username }),
-  //     });
-
-  //     const data = await response.json();
-  //     if (response.status === 200) {
-  //       setLoginSuccess(data.message);
-  //       setUsername("");
-  //       setErrors({});
-  //     } else {
-  //       setErrors({ username: data.message });
-  //       setLoginSuccess("");
-  //     }
-  //   } catch (error) {
-  //     Alert.alert("Error", "Unable to connect to server");
-  //   }
-  // };
-
-  // const handleSubmit = () => {
-  //   if (validateForm()) {
-  //     handleLogin();
-  //   } else {
-  //     setLoginSuccess("");
-  //   }
-  // };
-
-  // const handleLogin = async () => {
-  //   if (!validateForm()) {
-  //     setLoginSuccess("");
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-  //   try {
-  //     const response = await fetch('http://localhost:5000/login', {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ username }),
-  //     });
-
-  //     const data = await response.json();
-  //     if (response.status === 200) {
-  //       setLoginSuccess(data.message);
-  //       setUsername("");
-  //       setErrors({});
-  //     } else {
-  //       setErrors({ username: data.message });
-  //       setLoginSuccess("");
-  //     }
-  //   } catch (error) {
-  //     Alert.alert("Error", "Unable to connect to server");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   return (
     <KeyboardAvoidingView
@@ -125,26 +79,10 @@ export default function HomeScreen({ navigation }) {
         {errors.username ? (
           <Text style={styles.errorText}>{errors.username}</Text>
         ) : null}
-        {/* <Text style={styles.label}>Password</Text>
-          <TextInput style={styles.input} placeholder='Enter your password' secureTextEntry value={password} onChangeText={setPassword } />
-          {
-            errors.password ? <Text style={styles.errorText}>{errors.password}</Text> :null
-          } */}
         <View style={styles.actionButtonGroup}>
           <TouchableOpacity style={styles.actionButton} onPress={handleSubmit}>
             <Text style={styles.actionButtonText}>Login</Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.actionButtonText}>Login</Text>
-            )}
-          </TouchableOpacity> */}
         </View>
       </View>
       {loginSuccess && <Text style={styles.successText}>{loginSuccess}</Text>}
@@ -184,7 +122,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 20,
     fontWeight: "bold",
-    textAlign: "center",
+    textAlign: "center"
   },
   input: {
     height: 40,

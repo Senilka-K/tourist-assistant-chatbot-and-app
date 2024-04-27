@@ -149,7 +149,8 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const User = require('./Models/Users');
-const FormDetails = require('./Models/FormDetails')
+const FormDetails = require('./Models/FormDetails');
+const Emergency = require('./Models/Emergency')
 
 const app = express();
 
@@ -265,6 +266,95 @@ app.put('/edit-form', async (req, res) => {
     res.status(500).json({ message: 'Error updating form data', error: error.message });
   }
 });
+
+// Emergency declaring endpoint
+app.post('/emergency-declare', async (req, res) => {
+  try {
+    const { userId, latitude, longitude, onGoingEmergency } = req.body;
+    const newEmergency = new Emergency({
+      userId,
+      location: { latitude, longitude },
+      onGoingEmergency,
+    });
+
+    await newEmergency.save();
+    console.log(newEmergency);
+    res.status(201).send({ message: 'Emergency declared successfully!', data: newEmergency });
+  } catch (error) {
+    res.status(400).send({ message: 'Failed to declare emergency', error: error.message });
+  }
+});
+
+// Emergency massage endpoint
+app.put('/emergency-message', async (req, res) => {
+  const { userId, message } = req.body;
+  console.log(userId);
+
+  if (!message) {
+    return res.status(400).json({ message: 'No message provided' });
+  }
+
+  try {
+    const updatedEmergency = await Emergency.findOneAndUpdate(
+      { userId: userId, onGoingEmergency: true },
+      { $push: { message: message } },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedEmergency) {
+      return res.status(404).json({ message: 'Emergency not found for the given user ID' });
+    }
+
+    res.status(200).json({ message: 'Message added successfully', data: updatedEmergency });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to update emergency', error: error.message });
+  }
+});
+
+// Cancel emergency endpoint
+app.put('/emergency-cancel', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    const updatedEmergency = await Emergency.findOneAndUpdate(
+      { userId: userId, onGoingEmergency: true },
+      { $set: { onGoingEmergency: false } },
+      { new: true }
+    );
+
+    if (!updatedEmergency) {
+      return res.status(404).json({ message: 'No ongoing emergency found for this user.' });
+    }
+
+    res.status(200).json({ message: 'Emergency cancelled successfully', data: updatedEmergency });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to cancel emergency', error: error.message });
+  }
+});
+
+
+// // Delete emergency endpoint
+// app.delete('/emergency-delete', async (req, res) => {
+//   const { userId } = req.body;
+//   if (!userId) {
+//     return res.status(400).json({ message: 'User ID is required' });
+//   }
+//   try {
+//     const result = await Emergency.findOneAndDelete({ userId: userId });
+//     if (!result) {
+//       return res.status(404).json({ message: 'Emergency not found for the given user' });
+//     }
+//     res.status(200).json({ message: 'Emergency deleted successfully' });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Error deleting Emergency', error: error.message });
+//   }
+// });
 
 // Listen on a port
 const PORT = process.env.PORT || 5000;

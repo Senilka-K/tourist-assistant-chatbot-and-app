@@ -10,10 +10,12 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
+import { getUserId } from "../UserIdStore";
 
 const MapScreen = ({ route }) => {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
@@ -22,7 +24,6 @@ const MapScreen = ({ route }) => {
   });
 
   const [isEmergencyDeclared, setIsEmergencyDeclared] = useState(false);
-  //   const { emergencyNo } = route.params; // assuming emergencyNo is passed via navigation params
 
   useEffect(() => {
     (async () => {
@@ -43,6 +44,91 @@ const MapScreen = ({ route }) => {
     })();
   }, []);
 
+  const declareEmergency = async () => {
+    const userId = await getUserId();
+    if (userId){
+    setUserId(userId);
+      try {
+        const response = await fetch('https://piglet-vital-alien.ngrok-free.app/emergency-declare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            onGoingEmergency: true,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setIsEmergencyDeclared(true);
+          Alert.alert("Emergency Declared", "Your emergency has been declared!");
+        } else {
+          Alert.alert("Error", data.message);
+        }
+      } catch (error) {
+        console.error("Failed to declare emergency", error);
+        Alert.alert("Error", "Failed to declare emergency");
+      }
+    }
+  };
+
+  const sendEmergencyMessage = async (message) => {
+    const userId = await getUserId();
+    if (!userId) {
+      Alert.alert("Error", "User not identified");
+      return;
+    }
+  
+    if (!message) {
+      Alert.alert("Error", "Message is empty");
+      return;
+    }
+  
+    try {
+      const response = await fetch('https://piglet-vital-alien.ngrok-free.app/emergency-message', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          message
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        Alert.alert("Success", "Your message has been added!");
+      } else {
+        Alert.alert("Error", data.message);
+      }
+    } catch (error) {
+      console.error("Failed to send message", error);
+      Alert.alert("Error", "Failed to send message");
+    }
+  };
+
+  const cancelEmergency = async (userId) => {
+    try {
+      const response = await fetch('https://piglet-vital-alien.ngrok-free.app/emergency-cancel', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setIsEmergencyDeclared(false);
+        Alert.alert("Emergency Cancelled", "Your emergency has been cancelled.");
+      } else {
+        Alert.alert("Error", data.message);
+      }
+    } catch (error) {
+      console.error("Failed to cancel emergency", error);
+      Alert.alert("Error", "Failed to cancel emergency");
+    }
+  };
+  
+
   const handleEmergencyToggle = () => {
     if (isEmergencyDeclared) {
       // Ask user if they really want to cancel the emergency
@@ -58,20 +144,17 @@ const MapScreen = ({ route }) => {
           {
             text: "Yes",
             onPress: () => {
-              console.log("Emergency Cancelled");
+              cancelEmergency(userId),
               setIsEmergencyDeclared(false);
-              Alert.alert(
-                "Emergency Cancelled",
-                "Your emergency has been cancelled."
-              );
             },
           },
         ]
       );
     } else {
-      Alert.alert("Emergency Declared", "Your emergency has been declared!", [
-        { text: "OK" },
-      ]);
+      declareEmergency();
+      // Alert.alert("Emergency Declared", "Your emergency has been declared!", [
+      //   { text: "OK" },
+      // ]);
       setIsEmergencyDeclared(true);
     }
   };
@@ -97,7 +180,7 @@ const MapScreen = ({ route }) => {
         { text: "Cancel", style: "cancel" },
         {
           text: "Send",
-          onPress: (message) => console.log("Emergency message:", message),
+          onPress: sendEmergencyMessage,
         },
       ],
       "plain-text"

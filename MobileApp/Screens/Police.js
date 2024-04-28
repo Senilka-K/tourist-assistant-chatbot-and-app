@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import { NGROK_STATIC_DOMAIN } from '@env';
 
 const Police = () => {
   const [locations, setLocations] = useState([]);
@@ -8,7 +9,7 @@ const Police = () => {
   useEffect(() => {
     const fetchEmergencies = async () => {
       try {
-        const response = await fetch('https://piglet-vital-alien.ngrok-free.app/emergency-ongoing');
+        const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-ongoing`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

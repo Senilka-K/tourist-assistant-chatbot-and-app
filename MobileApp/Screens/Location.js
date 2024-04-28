@@ -12,6 +12,7 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { getUserId } from "../UserIdStore";
 import { useTranslation } from "react-i18next";
+import { NGROK_STATIC_DOMAIN } from '@env';
 
 const MapScreen = ({ route }) => {
   const [location, setLocation] = useState(null);
@@ -50,7 +51,7 @@ const MapScreen = ({ route }) => {
     if (userId){
     setUserId(userId);
       try {
-        const response = await fetch('https://piglet-vital-alien.ngrok-free.app/emergency-declare', {
+        const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-declare`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -89,7 +90,7 @@ const MapScreen = ({ route }) => {
     }
   
     try {
-      const response = await fetch('https://piglet-vital-alien.ngrok-free.app/emergency-message', {
+      const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-message`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,7 +112,7 @@ const MapScreen = ({ route }) => {
 
   const cancelEmergency = async (userId) => {
     try {
-      const response = await fetch('https://piglet-vital-alien.ngrok-free.app/emergency-cancel', {
+      const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-cancel`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),

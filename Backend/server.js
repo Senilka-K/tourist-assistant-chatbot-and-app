@@ -6,6 +6,8 @@ const User = require("./Models/Users");
 const FormDetails = require("./Models/FormDetails");
 const Emergency = require("./Models/Emergency");
 
+require('dotenv').config();
+
 const app = express();
 
 // Middleware
@@ -13,13 +15,10 @@ app.use(bodyParser.json());
 app.use(cors());
 
 mongoose
-  .connect(
-    "mongodb+srv://senilka0108:abcd4321@cluster0.r55v5qx.mongodb.net/tourist_app?retryWrites=true&w=majority&appName=Cluster0/",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect(process.env.MONGODB_CONNECTION_STRING, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("Connected to MongoDB Atlas"))
   .catch((err) => console.error("Error connecting to MongoDB Atlas:", err));
 
@@ -138,12 +137,10 @@ app.post("/emergency-declare", async (req, res) => {
 
     await newEmergency.save();
     console.log(newEmergency);
-    res
-      .status(201)
-      .send({
-        message: "Emergency declared successfully!",
-        data: newEmergency,
-      });
+    res.status(201).send({
+      message: "Emergency declared successfully!",
+      data: newEmergency,
+    });
   } catch (error) {
     res
       .status(400)
@@ -204,12 +201,10 @@ app.put("/emergency-cancel", async (req, res) => {
         .json({ message: "No ongoing emergency found for this user." });
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Emergency cancelled successfully",
-        data: updatedEmergency, 
-      });
+    res.status(200).json({
+      message: "Emergency cancelled successfully",
+      data: updatedEmergency,
+    });
   } catch (error) {
     console.error(error);
     res
@@ -219,26 +214,31 @@ app.put("/emergency-cancel", async (req, res) => {
 });
 
 // Getting on going emergencies endpoint
-app.get('/emergency-ongoing', async (req, res) => {
+app.get("/emergency-ongoing", async (req, res) => {
   try {
     const emergencies = await Emergency.find({ onGoingEmergency: true })
       .populate({
-        path: 'userId',        
-        select: 'username -_id'
+        path: "userId",
+        select: "username -_id",
       })
-      .select('location dateTimeDeclared message -_id')
+      .select("location dateTimeDeclared message -_id")
       .exec();
 
-    const transformedEmergencies = emergencies.map(emergency => ({
+    const transformedEmergencies = emergencies.map((emergency) => ({
       location: emergency.location,
       dateTimeDeclared: emergency.dateTimeDeclared,
       message: emergency.message,
-      username: emergency.userId.username
+      username: emergency.userId.username,
     }));
 
     res.status(200).json(transformedEmergencies);
   } catch (error) {
-    res.status(500).json({ message: "An error occurred while retrieving the data", error: error });
+    res
+      .status(500)
+      .json({
+        message: "An error occurred while retrieving the data",
+        error: error,
+      });
   }
 });
 

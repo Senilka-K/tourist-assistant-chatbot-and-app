@@ -15,6 +15,7 @@ import {
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import { storeUserId } from "../UserIdStore";
 import { useTranslation } from 'react-i18next';
+import { NGROK_STATIC_DOMAIN } from '@env';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -35,7 +36,7 @@ export default function HomeScreen({ navigation }) {
   const handleSubmit = async () => { 
     if (validateForm()) {
       try {
-        const response = await fetch('https://piglet-vital-alien.ngrok-free.app/login', {
+        const response = await fetch(`${NGROK_STATIC_DOMAIN}/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

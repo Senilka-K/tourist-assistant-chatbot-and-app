@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { getUserId } from "../UserIdStore";
 import { useIsFocused } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
+import { NGROK_STATIC_DOMAIN } from '@env';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -41,7 +42,7 @@ export default function ApplicationForm() {
         setUserId(userId);
         try {
           const response = await fetch(
-            "https://piglet-vital-alien.ngrok-free.app/formData",
+            `${NGROK_STATIC_DOMAIN}/formData`,
             {
               method: "POST",
               headers: {
@@ -94,8 +95,8 @@ export default function ApplicationForm() {
     };
 
     const endpoint = isFormFilled
-      ? "https://piglet-vital-alien.ngrok-free.app/edit-form"
-      : "https://piglet-vital-alien.ngrok-free.app/submit-form";
+      ? `${NGROK_STATIC_DOMAIN}/edit-form`
+      : `${NGROK_STATIC_DOMAIN}/submit-form`;
     const method = isFormFilled ? "PUT" : "POST";
 
     try {
@@ -162,7 +163,7 @@ export default function ApplicationForm() {
     if (userId) {
       try {
         const response = await fetch(
-          "https://piglet-vital-alien.ngrok-free.app/delete-form",
+          `${NGROK_STATIC_DOMAIN}/delete-form`,
           {
             method: "DELETE",
             headers: {

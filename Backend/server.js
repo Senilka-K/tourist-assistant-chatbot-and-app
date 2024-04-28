@@ -14,7 +14,7 @@
 // mongoose.connect('mongodb+srv://senilka0108:abcd4321@cluster0.r55v5qx.mongodb.net/tourist_app?retryWrites=true&w=majority&appName=Cluster0/', { useNewUrlParser: true, useUnifiedTopology: true })
 //   .then(() => console.log('Connected to MongoDB Atlas'))
 //   .catch(err => console.error('Error connecting to MongoDB Atlas:', err));
-  
+
 //   // app.get('/users', async (req, res) => {
 //   //   try {
 //   //     const users = await User.find(); // Find all users in the database
@@ -29,10 +29,10 @@
 //   //   try {
 //   //     // Create a new user using the data in the request body
 //   //     const newUser = new User(req.body);
-  
+
 //   //     // Save the user to the database
 //   //     await newUser.save();
-  
+
 //   //     // Send back the created user
 //   //     res.status(201).json(newUser);
 //   //   } catch (error) {
@@ -138,19 +138,17 @@
 // //   }
 // // });
 
-
-
 // // Listen on a port
 // const PORT = process.env.PORT || 5000;
 // app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const User = require('./Models/Users');
-const FormDetails = require('./Models/FormDetails');
-const Emergency = require('./Models/Emergency')
+const express = require("express");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const User = require("./Models/Users");
+const FormDetails = require("./Models/FormDetails");
+const Emergency = require("./Models/Emergency");
 
 const app = express();
 
@@ -158,31 +156,54 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-mongoose.connect('mongodb+srv://senilka0108:abcd4321@cluster0.r55v5qx.mongodb.net/tourist_app?retryWrites=true&w=majority&appName=Cluster0/', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('Error connecting to MongoDB Atlas:', err));
+mongoose
+  .connect(
+    "mongodb+srv://senilka0108:abcd4321@cluster0.r55v5qx.mongodb.net/tourist_app?retryWrites=true&w=majority&appName=Cluster0/",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(() => console.log("Connected to MongoDB Atlas"))
+  .catch((err) => console.error("Error connecting to MongoDB Atlas:", err));
 
 // Add User endpont
-  app.post('/add-user', async (req, res) => {
-    try {
-      // Create a new user using the data in the request body
-      const newUser = new User(req.body);
-  
-      // Save the user to the database
-      await newUser.save();
-  
-      // Send back the created user
-      res.status(201).json(newUser);
-    } catch (error) {
-      res.status(500).json({ message: 'Error creating the user', error: error });
+app.post("/add-user", async (req, res) => {
+  try {
+    // Create a new user using the data in the request body
+    const newUser = new User(req.body);
+
+    // Save the user to the database
+    await newUser.save();
+
+    // Send back the created user
+    res.status(201).json(newUser);
+  } catch (error) {
+    res.status(500).json({ message: "Error creating the user", error: error });
+  }
+});
+
+// Check username endpoint
+  app.post('/check-username', async (req, res) => {
+    const { username } = req.body; // Get the username from query parameters
+    if (!username) {
+        return res.status(400).json({ message: 'Username is required' });
     }
-  });
+
+    try {
+        const user = await User.findOne({ username: username }); // Find user by username
+        if (user) {
+            res.json({ exists: true, message: 'Username exists' });
+        } else {
+            res.json({ exists: false, message: 'Username does not exist' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error checking username', error: error });
+    }
+});
 
 // User login endpoint
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
   const { username } = req.body;
   try {
     const user = await User.findOne({ username: username });
@@ -198,57 +219,69 @@ app.post('/login', async (req, res) => {
 });
 
 // Already filled formData getting endpoint
-app.post('/formData', async (req, res) => {
-  const { userId } = req.body; 
+app.post("/formData", async (req, res) => {
+  const { userId } = req.body;
   try {
     const formData = await FormDetails.findOne({ userId: userId });
     if (!formData) {
-      return res.status(404).json({ message: 'Form data not found for the given user ID' });
+      return res
+        .status(404)
+        .json({ message: "Form data not found for the given user ID" });
     }
     res.json(formData);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving form data', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error retrieving form data", error: error.message });
   }
 });
 
 // Form submition endpoint
-app.post('/submit-form', async (req, res) => {
+app.post("/submit-form", async (req, res) => {
   const formData = new FormDetails(req.body);
   try {
     await formData.save();
-    res.status(200).json({ message: 'Form data saved successfully.' });
+    res.status(200).json({ message: "Form data saved successfully." });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Error saving form data', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error saving form data", error: error.message });
   }
 });
 
 // Form delete endpoint
-app.delete('/delete-form', async (req, res) => {
+app.delete("/delete-form", async (req, res) => {
   const { userId } = req.body;
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' });
+    return res.status(400).json({ message: "User ID is required" });
   }
   try {
     const result = await FormDetails.findOneAndDelete({ userId: userId });
     if (!result) {
-      return res.status(404).json({ message: 'Form data not found for the given user' });
+      return res
+        .status(404)
+        .json({ message: "Form data not found for the given user" });
     }
-    res.status(200).json({ message: 'Form data deleted successfully' });
+    res.status(200).json({ message: "Form data deleted successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Error deleting form data', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error deleting form data", error: error.message });
   }
 });
- 
+
 //Form edit endpoint
-app.put('/edit-form', async (req, res) => {
-  const { userId } = req.body; 
+app.put("/edit-form", async (req, res) => {
+  const { userId } = req.body;
   console.log(userId);
   try {
     const formData = await FormDetails.findOne({ userId: userId });
     if (!formData) {
-      return res.status(404).json({ message: 'Form data not found for the given user ID' });
+      return res
+        .status(404)
+        .json({ message: "Form data not found for the given user ID" });
     }
     formData.name = req.body.name || formData.name;
     formData.arriveDate = req.body.arriveDate || formData.arriveDate;
@@ -257,18 +290,23 @@ app.put('/edit-form', async (req, res) => {
     formData.passportId = req.body.passportId || formData.passportId;
     formData.emergencyNo = req.body.emergencyNo || formData.emergencyNo;
     formData.comment = req.body.comment || formData.comment;
-    formData.likesTracking = req.body.likesTracking !== undefined ? req.body.likesTracking : formData.likesTracking;
-    
+    formData.likesTracking =
+      req.body.likesTracking !== undefined
+        ? req.body.likesTracking
+        : formData.likesTracking;
+
     await formData.save();
-    res.status(200).json({ message: 'Form updated successfully' });
+    res.status(200).json({ message: "Form updated successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Error updating form data', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error updating form data", error: error.message });
   }
 });
 
 // Emergency declaring endpoint
-app.post('/emergency-declare', async (req, res) => {
+app.post("/emergency-declare", async (req, res) => {
   try {
     const { userId, latitude, longitude, onGoingEmergency } = req.body;
     const newEmergency = new Emergency({
@@ -279,19 +317,26 @@ app.post('/emergency-declare', async (req, res) => {
 
     await newEmergency.save();
     console.log(newEmergency);
-    res.status(201).send({ message: 'Emergency declared successfully!', data: newEmergency });
+    res
+      .status(201)
+      .send({
+        message: "Emergency declared successfully!",
+        data: newEmergency,
+      });
   } catch (error) {
-    res.status(400).send({ message: 'Failed to declare emergency', error: error.message });
+    res
+      .status(400)
+      .send({ message: "Failed to declare emergency", error: error.message });
   }
 });
 
 // Emergency massage endpoint
-app.put('/emergency-message', async (req, res) => {
+app.put("/emergency-message", async (req, res) => {
   const { userId, message } = req.body;
   console.log(userId);
 
   if (!message) {
-    return res.status(400).json({ message: 'No message provided' });
+    return res.status(400).json({ message: "No message provided" });
   }
 
   try {
@@ -302,21 +347,27 @@ app.put('/emergency-message', async (req, res) => {
     );
 
     if (!updatedEmergency) {
-      return res.status(404).json({ message: 'Emergency not found for the given user ID' });
+      return res
+        .status(404)
+        .json({ message: "Emergency not found for the given user ID" });
     }
 
-    res.status(200).json({ message: 'Message added successfully', data: updatedEmergency });
+    res
+      .status(200)
+      .json({ message: "Message added successfully", data: updatedEmergency });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Failed to update emergency', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to update emergency", error: error.message });
   }
 });
 
 // Cancel emergency endpoint
-app.put('/emergency-cancel', async (req, res) => {
+app.put("/emergency-cancel", async (req, res) => {
   const { userId } = req.body;
   if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' });
+    return res.status(400).json({ message: "User ID is required" });
   }
 
   try {
@@ -327,16 +378,60 @@ app.put('/emergency-cancel', async (req, res) => {
     );
 
     if (!updatedEmergency) {
-      return res.status(404).json({ message: 'No ongoing emergency found for this user.' });
+      return res
+        .status(404)
+        .json({ message: "No ongoing emergency found for this user." });
     }
 
-    res.status(200).json({ message: 'Emergency cancelled successfully', data: updatedEmergency });
+    res
+      .status(200)
+      .json({
+        message: "Emergency cancelled successfully",
+        data: updatedEmergency, 
+      });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Failed to cancel emergency', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to cancel emergency", error: error.message });
   }
 });
 
+// On going emergencies getting endpoint
+app.get('/emergency-ongoing', async (req, res) => {
+  try {
+    const emergencies = await Emergency.find({ onGoingEmergency: true })
+      .populate({
+        path: 'userId',        
+        select: 'username -_id'
+      })
+      .select('location dateTimeDeclared message -_id')
+      .exec();
+
+    const transformedEmergencies = emergencies.map(emergency => ({
+      location: emergency.location,
+      dateTimeDeclared: emergency.dateTimeDeclared,
+      message: emergency.message,
+      username: emergency.userId.username
+    }));
+
+    res.status(200).json(transformedEmergencies);
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while retrieving the data", error: error });
+  }
+});
+
+// app.get('/emergency-ongoing', async (req, res) => {
+//   try {
+//     const emergencies = await Emergency.find({ onGoingEmergency: true })
+//       .select('userId location dateTimeDeclared message -_id')
+//       .exec();
+
+//     res.status(200).json(emergencies);
+//   } catch (error) {
+//     res.status(500).json({ message: "An error occurred while retrieving the data", error: error });
+//   }
+// });
 
 // // Delete emergency endpoint
 // app.delete('/emergency-delete', async (req, res) => {
@@ -359,4 +454,3 @@ app.put('/emergency-cancel', async (req, res) => {
 // Listen on a port
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-

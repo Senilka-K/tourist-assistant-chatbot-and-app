@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
 
 const emergenciesSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
     onGoingEmergency: { type: Boolean, default: true },
     dateTimeDeclared: { type: Date, default: Date.now },
     location: {

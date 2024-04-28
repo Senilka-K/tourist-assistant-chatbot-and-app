@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import { storeUserId } from "../UserIdStore";
+import { useTranslation } from 'react-i18next';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -25,7 +26,7 @@ export default function HomeScreen({ navigation }) {
   const validateForm = () => {
     let errors = {};
 
-    if (!username) errors.username = "Username is required";
+    if (!username) errors.username = t('username_error_message');
 
     setErrors(errors);
     return Object.keys(errors).length === 0;
@@ -62,17 +63,20 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const { t } = useTranslation();
+
   return (
     <KeyboardAvoidingView
       behavior="padding"
       keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       style={styles.container}
     >
+      <Text style={styles.text}>{t('welcome_message')}</Text>
       <View style={styles.form}>
-        <Text style={styles.label}>Username</Text>
+        <Text style={styles.label}>{t('Username')}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter your username"
+          placeholder={t('Username_placeholder')}
           value={username}
           onChangeText={setUsername}
         />
@@ -81,7 +85,7 @@ export default function HomeScreen({ navigation }) {
         ) : null}
         <View style={styles.actionButtonGroup}>
           <TouchableOpacity style={styles.actionButton} onPress={handleSubmit}>
-            <Text style={styles.actionButtonText}>Login</Text>
+            <Text style={styles.actionButtonText}>{t('login_button')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -147,12 +151,12 @@ const styles = StyleSheet.create({
   actionButton: {
     backgroundColor: "grey",
     padding: 10,
-    width: 80,
+    width: screenWidth - 250,
     alignItems: "center",
     borderRadius: 5,
   },
   actionButtonText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#fff",
   },
 });

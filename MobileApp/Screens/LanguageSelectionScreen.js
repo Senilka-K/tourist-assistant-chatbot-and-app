@@ -1,20 +1,28 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import { useLanguage } from '../LanguageContext';
+import i18n from '../I18n';
 
 const languages = [
     { code: 'en', label: 'English' },
     { code: 'fr', label: 'French' },
-    { code: 'es', label: 'Spanish' }
+    { code: 'es', label: 'Spanish' },
+    { code: 'de', label: 'German' },
+    { code: 'zh', label: 'Chinese' }
 ];
 
 const LanguageSelectionScreen = () => {
     const { language, switchLanguage } = useLanguage();
 
+    const handleLanguageChange = (code) => {
+        switchLanguage(code); // Update the context
+        i18n.changeLanguage(code); // Update i18next language setting
+    };
+
     const renderItem = ({ item }) => (
         <TouchableOpacity
             style={styles.item}
-            onPress={() => switchLanguage(item.code)}
+            onPress={() => handleLanguageChange(item.code)}
         >
             <Text style={styles.text}>
                 {item.label}

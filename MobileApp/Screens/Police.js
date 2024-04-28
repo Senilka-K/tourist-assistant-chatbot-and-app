@@ -131,7 +131,7 @@ const Police = () => {
   useEffect(() => {
     const fetchEmergencies = async () => {
       try {
-        const response = await fetch('https://piglet-vital-alien.ngrok-free.app/emergency-ongoing'); // Adjust the URL if your server is running on a different domain
+        const response = await fetch('https://piglet-vital-alien.ngrok-free.app/emergency-ongoing');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

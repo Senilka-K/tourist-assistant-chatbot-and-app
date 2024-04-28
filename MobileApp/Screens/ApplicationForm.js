@@ -14,6 +14,7 @@ import {
 import { useState, useEffect } from "react";
 import { getUserId } from "../UserIdStore";
 import { useIsFocused } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -32,109 +33,125 @@ export default function ApplicationForm() {
   const [errors, setErrors] = useState({});
 
   const isFocused = useIsFocused();
-  
-    useEffect(() => {
-  
-      const fetchUserId = async () => {
-        const userId = await getUserId();
-        if (userId){
-          setUserId(userId);
-          try{
-            const response = await fetch('https://piglet-vital-alien.ngrok-free.app/formData', {
-              method: 'POST',
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const userId = await getUserId();
+      if (userId) {
+        setUserId(userId);
+        try {
+          const response = await fetch(
+            "https://piglet-vital-alien.ngrok-free.app/formData",
+            {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json",
               },
-              body: JSON.stringify({ userId })
-            });
-            
-            const data = await response.json();
-            
-            if (response.status === 200){
-              console.log("success", data);
-              setName(data.name);
-              setArriveDate(data.arriveDate);
-              setDistrict(data.district);
-              setContactNo(data.contactNo);
-              setPassportId(data.passportId);
-              setEmergencyNo(data.emergencyNo);
-              setComment(data.comment);
-              setLikesTracking(data.likesTracking);
-              setIsFormFilled(true);
-              setIsEditable(false);
-              console.log("done");
-            } else {
-              setIsFormFilled(false);
-              setIsEditable(true); 
+              body: JSON.stringify({ userId }),
             }
-          } 
-          catch (error) {
-            console.error('Error!', error);
+          );
+
+          const data = await response.json();
+
+          if (response.status === 200) {
+            console.log("success", data);
+            setName(data.name);
+            setArriveDate(data.arriveDate);
+            setDistrict(data.district);
+            setContactNo(data.contactNo);
+            setPassportId(data.passportId);
+            setEmergencyNo(data.emergencyNo);
+            setComment(data.comment);
+            setLikesTracking(data.likesTracking);
+            setIsFormFilled(true);
+            setIsEditable(false);
+            console.log("done");
+          } else {
+            setIsFormFilled(false);
+            setIsEditable(true);
           }
+        } catch (error) {
+          console.error("Error!", error);
         }
-      };
-  
-      fetchUserId();
-    }, [isFocused]);
+      }
+    };
+
+    fetchUserId();
+  }, [isFocused]);
 
   const handleDone = async () => {
     console.log(userId);
     const formData = {
-        userId,
-        name,
-        arriveDate,
-        district,
-        contactNo,
-        passportId,
-        emergencyNo,
-        comment,
-        likesTracking
+      userId,
+      name,
+      arriveDate,
+      district,
+      contactNo,
+      passportId,
+      emergencyNo,
+      comment,
+      likesTracking,
     };
 
-    const endpoint = isFormFilled ? 'https://piglet-vital-alien.ngrok-free.app/edit-form' : 'https://piglet-vital-alien.ngrok-free.app/submit-form';
-    const method = isFormFilled ? 'PUT' : 'POST';
+    const endpoint = isFormFilled
+      ? "https://piglet-vital-alien.ngrok-free.app/edit-form"
+      : "https://piglet-vital-alien.ngrok-free.app/submit-form";
+    const method = isFormFilled ? "PUT" : "POST";
 
     try {
-        console.log(JSON.stringify(formData));
-        const response = await fetch(endpoint, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        });
+      console.log(JSON.stringify(formData));
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-        const responseJson = await response.json();
-        if (response.ok) {
-            setIsEditable(false);
-            setIsFormFilled(true);
-            Alert.alert("Success", isFormFilled ? "Form updated successfully!" : "Form submitted successfully!");
-        } else {
-            throw new Error(responseJson.message);
-        }
+      const responseJson = await response.json();
+      if (response.ok) {
+        setIsEditable(false);
+        setIsFormFilled(true);
+        Alert.alert(
+          t("success_alert"),
+          isFormFilled
+            ? t("form_success_alert_update")
+            : t("form_success_alert_submission")
+        );
+      } else {
+        throw new Error(responseJson.message);
+      }
     } catch (error) {
-        console.error("Submission failed", error); 
-        Alert.alert("Error", "Failed to " + (isFormFilled ? "update" : "submit") + " form");
+      console.error("Submission failed", error);
+      Alert.alert(
+        t("form_failed_alert"),
+        isFormFilled
+          ? t("form_failed_alert_update")
+          : t("form_failed_alert_submission")
+      );
     }
-};
+  };
 
   const handleEdit = async () => {
     const id = await getUserId();
     console.log(id);
     setIsEditable(true);
-    Alert.alert("Edit", "You can now edit the form.");
+    Alert.alert(t("error_alert"), t("form_edit_alert_message"));
   };
 
   const handleDelete = () => {
     Alert.alert(
-      "Delete",
-      "Are you sure you want to delete this information?",
+      t("form_delete_alert"),
+      t("form_delete_alert_message"),
       [
-        { text: "No", style: "cancel" },
-        { text: "Yes", onPress: () => {
-          deleteFormData();
-          console.log("Information Deleted");
-        }},
+        { text: t("no"), style: "cancel" },
+        {
+          text: t("yes"),
+          onPress: () => {
+            deleteFormData();
+            console.log("Information Deleted");
+          },
+        },
       ],
       { cancelable: false }
     );
@@ -143,40 +160,44 @@ export default function ApplicationForm() {
   const deleteFormData = async () => {
     const userId = await getUserId();
     if (userId) {
-        try {
-            const response = await fetch('https://piglet-vital-alien.ngrok-free.app/delete-form', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userId }),
-            });
+      try {
+        const response = await fetch(
+          "https://piglet-vital-alien.ngrok-free.app/delete-form",
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userId }),
+          }
+        );
 
-            const responseData = await response.json();
-            if (response.ok) {
-                setName('');
-                setArriveDate('');
-                setDistrict('');
-                setContactNo('');
-                setPassportId('');
-                setEmergencyNo('');
-                setComment('');
-                setLikesTracking(null);
-                setIsFormFilled(false);
-                setIsEditable(true); 
-                console.log('Form data deleted successfully');
-                Alert.alert("Success", "Form data deleted successfully");
-            } else {
-                throw new Error(responseData.message);
-            }
-        } catch (error) {
-            console.error("Error deleting form data:", error);
-            Alert.alert("Error", "Failed to delete form data");
+        const responseData = await response.json();
+        if (response.ok) {
+          setName("");
+          setArriveDate("");
+          setDistrict("");
+          setContactNo("");
+          setPassportId("");
+          setEmergencyNo("");
+          setComment("");
+          setLikesTracking(null);
+          setIsFormFilled(false);
+          setIsEditable(true);
+          console.log("Form data deleted successfully");
+          Alert.alert(t("success_alert"), t("form_delete_success_alert_message"));
+        } else {
+          throw new Error(responseData.message);
         }
+      } catch (error) {
+        console.error("Error deleting form data:", error);
+        Alert.alert(t("error_alert"), t("form_delete_failed_alert_message"));
+      }
     } else {
-        Alert.alert("Error", "User ID is not available");
+      Alert.alert(t("error_alert"), t("userId_error_message"));
     }
-};
+  };
+  const { t } = useTranslation();
 
   return (
     <KeyboardAvoidingView
@@ -186,23 +207,23 @@ export default function ApplicationForm() {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.container}>
-          <Text style={styles.text}>Application Form</Text>
+          <Text style={styles.text}>{t("application_form")}</Text>
           <View style={styles.form}>
-            <Text style={styles.label}>Name:</Text>
+            <Text style={styles.label}>{t("application_name")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your Name"
+              placeholder={t("application_name_placeholder")}
               value={name}
               onChangeText={setName}
-              editable={isEditable} 
+              editable={isEditable}
             />
             {errors.name ? (
               <Text style={styles.errorText}>{errors.name}</Text>
             ) : null}
-            <Text style={styles.label}>Arrive Date:</Text>
+            <Text style={styles.label}>{t("application_arrive_date")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your Arrival Date"
+              placeholder={t("application_arrive_date_placeholder")}
               value={arriveDate}
               onChangeText={setArriveDate}
               editable={isEditable}
@@ -210,10 +231,10 @@ export default function ApplicationForm() {
             {errors.arriveDate ? (
               <Text style={styles.errorText}>{errors.arriveDate}</Text>
             ) : null}
-            <Text style={styles.label}>Hope to go district:</Text>
+            <Text style={styles.label}>{t("application_district")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your hope to go district"
+              placeholder={t("application_district_placeholder")}
               value={district}
               onChangeText={setDistrict}
               editable={isEditable}
@@ -221,10 +242,10 @@ export default function ApplicationForm() {
             {errors.district ? (
               <Text style={styles.errorText}>{errors.district}</Text>
             ) : null}
-            <Text style={styles.label}>Contact No:</Text>
+            <Text style={styles.label}>{t("application_contact_no")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your Contact No"
+              placeholder={t("application_contact_no_placeholder")}
               value={contactNo}
               onChangeText={setContactNo}
               editable={isEditable}
@@ -232,10 +253,10 @@ export default function ApplicationForm() {
             {errors.contactNo ? (
               <Text style={styles.errorText}>{errors.contactNo}</Text>
             ) : null}
-            <Text style={styles.label}>Passport Id:</Text>
+            <Text style={styles.label}>{t("application_passport_id")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your Passport Id"
+              placeholder={t("application_passport_id_placeholder")}
               value={passportId}
               onChangeText={setPassportId}
               editable={isEditable}
@@ -243,10 +264,10 @@ export default function ApplicationForm() {
             {errors.passportId ? (
               <Text style={styles.errorText}>{errors.passportId}</Text>
             ) : null}
-            <Text style={styles.label}>Emergency No:</Text>
+            <Text style={styles.label}>{t("application_emergency_no")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your Emergency No"
+              placeholder={t("application_emergency_no_placeholder")}
               value={emergencyNo}
               onChangeText={setEmergencyNo}
               editable={isEditable}
@@ -254,10 +275,10 @@ export default function ApplicationForm() {
             {errors.emergencyNo ? (
               <Text style={styles.errorText}>{errors.emergencyNo}</Text>
             ) : null}
-            <Text style={styles.label}>Comment:</Text>
+            <Text style={styles.label}>{t("application_comment")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your Comment"
+              placeholder={t("application_comment_placeholder")}
               value={comment}
               onChangeText={setComment}
               editable={isEditable}
@@ -265,7 +286,7 @@ export default function ApplicationForm() {
             {errors.comment ? (
               <Text style={styles.errorText}>{errors.comment}</Text>
             ) : null}
-            <Text style={styles.label}>Do you like Tracking</Text>
+            <Text style={styles.label}>{t("application_tracking")}</Text>
             <View style={styles.buttonGroup}>
               <TouchableOpacity
                 style={[
@@ -273,9 +294,11 @@ export default function ApplicationForm() {
                   likesTracking === "yes" ? styles.buttonSelected : null,
                 ]}
                 onPress={() => setLikesTracking("yes")}
-                editable={isEditable}
+                editable={isEditable} 
               >
-                <Text style={styles.buttonText}>Yes</Text>
+                <Text style={styles.buttonText}>
+                  {t("yes")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -285,7 +308,9 @@ export default function ApplicationForm() {
                 onPress={() => setLikesTracking("no")}
                 editable={isEditable}
               >
-                <Text style={styles.buttonText}>No</Text>
+                <Text style={styles.buttonText}>
+                  {t("no")}
+                </Text>
               </TouchableOpacity>
             </View>
             {errors.likesTracking ? (
@@ -296,21 +321,27 @@ export default function ApplicationForm() {
                 style={styles.actionButton}
                 onPress={handleDone}
               >
-                <Text style={styles.actionButtonText}>Done</Text>
+                <Text style={styles.actionButtonText}>
+                  {t("application_done")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={handleEdit}
                 disabled={!isFormFilled}
               >
-                <Text style={styles.actionButtonText}>Edit</Text>
+                <Text style={styles.actionButtonText}>
+                  {t("application_edit")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={handleDelete}
                 disabled={!isFormFilled}
               >
-                <Text style={styles.actionButtonText}>Delete</Text>
+                <Text style={styles.actionButtonText}>
+                  {t("application_delete")}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -391,7 +422,7 @@ const styles = StyleSheet.create({
   actionButton: {
     backgroundColor: "grey",
     padding: 10,
-    width: 80,
+    width: screenWidth - 300,
     alignItems: "center",
     borderRadius: 5,
   },

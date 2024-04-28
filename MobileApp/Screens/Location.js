@@ -11,6 +11,7 @@ import {
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { getUserId } from "../UserIdStore";
+import { useTranslation } from "react-i18next";
 
 const MapScreen = ({ route }) => {
   const [location, setLocation] = useState(null);
@@ -64,13 +65,13 @@ const MapScreen = ({ route }) => {
 
         if (response.ok) {
           setIsEmergencyDeclared(true);
-          Alert.alert("Emergency Declared", "Your emergency has been declared!");
+          Alert.alert(t("emergency_declared_alert"), t("emergency_declared_alert_message"));
         } else {
-          Alert.alert("Error", data.message);
+          Alert.alert(t("error_alert"), data.message);
         }
       } catch (error) {
         console.error("Failed to declare emergency", error);
-        Alert.alert("Error", "Failed to declare emergency");
+        Alert.alert(t("error_alert"), t("emergency_declared_alert_error_message"));
       }
     }
   };
@@ -78,12 +79,12 @@ const MapScreen = ({ route }) => {
   const sendEmergencyMessage = async (message) => {
     const userId = await getUserId();
     if (!userId) {
-      Alert.alert("Error", "User not identified");
+      Alert.alert(t("error_alert"), t("user_not_difined"));
       return;
     }
   
     if (!message) {
-      Alert.alert("Error", "Message is empty");
+      Alert.alert(t("error_alert"), t("emergency_message_alert"));
       return;
     }
   
@@ -98,13 +99,13 @@ const MapScreen = ({ route }) => {
       });
       const data = await response.json();
       if (response.ok) {
-        Alert.alert("Success", "Your message has been added!");
+        Alert.alert(t("success_alert"), t("emergency_message_alert_success_message"));
       } else {
-        Alert.alert("Error", data.message);
+        Alert.alert(t("error_alert"), data.message);
       }
     } catch (error) {
       console.error("Failed to send message", error);
-      Alert.alert("Error", "Failed to send message");
+      Alert.alert(t("error_alert"), t("emergency_message_alert_error_message"));
     }
   };
 
@@ -118,13 +119,13 @@ const MapScreen = ({ route }) => {
       const data = await response.json();
       if (response.ok) {
         setIsEmergencyDeclared(false);
-        Alert.alert("Emergency Cancelled", "Your emergency has been cancelled.");
+        Alert.alert(t("emergency_cancel_alert"), t("emergency_cancel_alert_message"));
       } else {
-        Alert.alert("Error", data.message);
+        Alert.alert(t("error_alert"), data.message);
       }
     } catch (error) {
       console.error("Failed to cancel emergency", error);
-      Alert.alert("Error", "Failed to cancel emergency");
+      Alert.alert(t("error_alert"), t("emergency_cancel_alert_error_message"));
     }
   };
   
@@ -133,16 +134,16 @@ const MapScreen = ({ route }) => {
     if (isEmergencyDeclared) {
       // Ask user if they really want to cancel the emergency
       Alert.alert(
-        "Cancel Emergency",
-        "Are you sure you want to cancel the emergency?",
+        t("cancel_emergency_alert"),
+        t("cancel_emergency_alert_message"),
         [
           {
-            text: "No",
+            text: t("no"),
             onPress: () => console.log("Cancel Cancelled"),
             style: "cancel",
           },
           {
-            text: "Yes",
+            text: t("yes"),
             onPress: () => {
               cancelEmergency(userId),
               setIsEmergencyDeclared(false);
@@ -152,34 +153,18 @@ const MapScreen = ({ route }) => {
       );
     } else {
       declareEmergency();
-      // Alert.alert("Emergency Declared", "Your emergency has been declared!", [
-      //   { text: "OK" },
-      // ]);
       setIsEmergencyDeclared(true);
     }
   };
 
-  //   const handleEmergencyCall = () => {
-  //     const url = `tel:${emergencyNo}`;
-  //     Linking.canOpenURL(url)
-  //       .then((supported) => {
-  //         if (!supported) {
-  //           Alert.alert("Phone call not supported");
-  //         } else {
-  //           return Linking.openURL(url);
-  //         }
-  //       })
-  //       .catch((err) => console.error('An error occurred', err));
-  //   };
-
   const handleEmergencyMessage = () => {
     Alert.prompt(
-      "Emergency Message",
-      "Describe your emergency",
+      t("message_alert"),
+      t("message_alert_message"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Send",
+          text: t("send"),
           onPress: sendEmergencyMessage,
         },
       ],
@@ -187,9 +172,11 @@ const MapScreen = ({ route }) => {
     );
   };
 
+  const { t } = useTranslation();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Your Current Location</Text>
+      <Text style={styles.text}>{t("location_page")}</Text>
       <MapView style={styles.map} region={mapRegion}>
         {location && (
           <Marker
@@ -197,7 +184,7 @@ const MapScreen = ({ route }) => {
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
             }}
-            title={"You are here"}
+            title={t("location_title")}
           />
         )}
       </MapView>
@@ -207,19 +194,19 @@ const MapScreen = ({ route }) => {
         onPress={handleEmergencyToggle}
       >
         <Text style={styles.actionButtonText}>
-          {isEmergencyDeclared ? "Cancel Emergency" : "Declare Emergency"}
+          {isEmergencyDeclared ? t("cancel_emergency") : t("declare_emergency")}
         </Text>
       </TouchableOpacity>
       {isEmergencyDeclared && (
         <View style={styles.emergencyOptions}>
           <TouchableOpacity style={styles.optionButton}>
-            <Text style={styles.optionButtonText}>Emergency Call</Text>
+            <Text style={styles.optionButtonText}>{t("emergency_call")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.optionButton}
             onPress={handleEmergencyMessage}
           >
-            <Text style={styles.optionButtonText}>Emergency Message</Text>
+            <Text style={styles.optionButtonText}>{t("emergency_message")}</Text>
           </TouchableOpacity>
         </View>
       )}

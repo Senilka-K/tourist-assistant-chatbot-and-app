@@ -132,7 +132,6 @@ const MapScreen = ({ route }) => {
 
   const handleEmergencyToggle = () => {
     if (isEmergencyDeclared) {
-      // Ask user if they really want to cancel the emergency
       Alert.alert(
         t("cancel_emergency_alert"),
         t("cancel_emergency_alert_message"),

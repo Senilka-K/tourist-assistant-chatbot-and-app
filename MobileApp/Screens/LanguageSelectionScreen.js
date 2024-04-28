@@ -15,8 +15,8 @@ const LanguageSelectionScreen = () => {
     const { language, switchLanguage } = useLanguage();
 
     const handleLanguageChange = (code) => {
-        switchLanguage(code); // Update the context
-        i18n.changeLanguage(code); // Update i18next language setting
+        switchLanguage(code);
+        i18n.changeLanguage(code);
     };
 
     const renderItem = ({ item }) => (

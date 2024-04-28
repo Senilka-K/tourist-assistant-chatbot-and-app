@@ -1,42 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import { NGROK_STATIC_DOMAIN } from '@env';
 
 const Police = () => {
-  const [locations, setLocations] = useState([
-    {
-      id: 1,
-      user: 'User A',
-      latitude: 37.78825,
-      longitude: -122.4324,
-      description: 'Emergency 1',
-      message: 'There has been a robbery here.'
-    },
-    {
-      id: 2,
-      user: 'User B',
-      latitude: 37.78925,
-      longitude: 102.4314,
-      description: 'Emergency 2',
-      message: 'Accident on the corner, needs immediate attention.'
-    },
-    {
-        id: 3,
-        user: 'User C',
-        latitude: 7.8731,
-        longitude: 80.7718,
-        description: 'Emergency 3',
-        message: 'There is a bomb.'
-    },
-    {
-        id: 4,
-        user: 'User D',
-        latitude: -25.2744,
-        longitude: 133.7751,
-        description: 'Emergency 4',
-        message: 'There has been a earthquake.'
-    }
-  ]);
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    const fetchEmergencies = async () => {
+      try {
+        const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-ongoing`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setLocations(data.map(item => ({
+          user: `User ${item.username}`, 
+          latitude: item.location.latitude,
+          longitude: item.location.longitude,
+          dateTimeDeclared: item.dateTimeDeclared, 
+          message: item.message.join(" "),
+        })));
+        console.log(data);
+      } catch (error) {
+        console.error('Failed to fetch emergencies:', error);
+      }
+    };
+
+    fetchEmergencies();
+  }, []);
 
   const [region, setRegion] = useState({
     latitude: 37.78825,
@@ -56,7 +48,9 @@ const Police = () => {
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.item} onPress={() => focusOnLocation(item.latitude, item.longitude)}>
       <Text style={styles.title}>{`Emergency Declared by ${item.user}`}</Text>
-      <Text style={styles.itemText}>{`Location: ${item.description}`}</Text>
+      <Text style={styles.itemText}>{`Latitude: ${item.latitude}`}</Text>
+      <Text style={styles.itemText}>{`Longitude: ${item.longitude}`}</Text>
+      <Text style={styles.itemText}>{`Declared: ${new Date(item.dateTimeDeclared).toLocaleString()}`}</Text>
       <Text style={styles.itemText}>{`Message: ${item.message}`}</Text>
     </TouchableOpacity>
   );
@@ -77,7 +71,6 @@ const Police = () => {
       <FlatList
         data={locations}
         renderItem={renderItem}
-        keyExtractor={item => item.id.toString()}
       />
     </View>
   );

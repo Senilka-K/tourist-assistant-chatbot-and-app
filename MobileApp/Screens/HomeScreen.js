@@ -9,9 +9,13 @@ import {
   TextInput,
   KeyboardAvoidingView,
   TouchableOpacity,
+  Alert,
   Platform,
 } from "react-native";
 import { Colors } from "react-native/Libraries/NewAppScreen";
+import { storeUserId } from "../UserIdStore";
+import { useTranslation } from 'react-i18next';
+import { NGROK_STATIC_DOMAIN } from '@env';
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -23,26 +27,44 @@ export default function HomeScreen({ navigation }) {
   const validateForm = () => {
     let errors = {};
 
-    if (!username) errors.username = "Username is required";
-    //   if (!password) errors.password = "Password is required";
+    if (!username) errors.username = t('username_error_message');
 
     setErrors(errors);
-
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => { 
     if (validateForm()) {
-      console.log("Login Successful", username);
-      setLoginSuccess(`${username} logged in successfully`);
-      // Resetting the form states
-      setUsername("");
-      // setPassword("");
-      setErrors({});
+      try {
+        const response = await fetch(`${NGROK_STATIC_DOMAIN}/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username })
+        });
+
+        const data = await response.json();
+
+        if (response.status === 200) {
+          setLoginSuccess(`${username} logged in successfully`);
+          storeUserId(data.user);
+          setUsername("");
+          setErrors({});
+        } else {
+          setLoginSuccess("");
+          Alert.alert("Login Failed", data.message);
+        }
+      } catch (error) {
+        setLoginSuccess("");
+        Alert.alert("Network Error", "Unable to connect to server");
+      }
     } else {
-      setLoginSuccess(""); // Clear success message if login fails
+      setLoginSuccess("");
     }
   };
+
+  const { t } = useTranslation();
 
   return (
     <KeyboardAvoidingView
@@ -50,25 +72,21 @@ export default function HomeScreen({ navigation }) {
       keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
       style={styles.container}
     >
+      <Text style={styles.text}>{t('welcome_message')}</Text>
       <View style={styles.form}>
-        <Text style={styles.label}>Username</Text>
+        <Text style={styles.label}>{t('Username')}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter your username"
+          placeholder={t('Username_placeholder')}
           value={username}
           onChangeText={setUsername}
         />
         {errors.username ? (
           <Text style={styles.errorText}>{errors.username}</Text>
         ) : null}
-        {/* <Text style={styles.label}>Password</Text>
-          <TextInput style={styles.input} placeholder='Enter your password' secureTextEntry value={password} onChangeText={setPassword } />
-          {
-            errors.password ? <Text style={styles.errorText}>{errors.password}</Text> :null
-          } */}
         <View style={styles.actionButtonGroup}>
           <TouchableOpacity style={styles.actionButton} onPress={handleSubmit}>
-            <Text style={styles.actionButtonText}>Login</Text>
+            <Text style={styles.actionButtonText}>{t('login_button')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -134,12 +152,12 @@ const styles = StyleSheet.create({
   actionButton: {
     backgroundColor: "grey",
     padding: 10,
-    width: 80,
+    width: screenWidth - 250,
     alignItems: "center",
     borderRadius: 5,
   },
   actionButtonText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#fff",
   },
 });

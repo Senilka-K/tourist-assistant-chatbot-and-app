@@ -10,10 +10,14 @@ import {
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
+import { getUserId } from "../UserIdStore";
+import { useTranslation } from "react-i18next";
+import { NGROK_STATIC_DOMAIN } from '@env';
 
 const MapScreen = ({ route }) => {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
@@ -22,7 +26,6 @@ const MapScreen = ({ route }) => {
   });
 
   const [isEmergencyDeclared, setIsEmergencyDeclared] = useState(false);
-  //   const { emergencyNo } = route.params; // assuming emergencyNo is passed via navigation params
 
   useEffect(() => {
     (async () => {
@@ -43,70 +46,137 @@ const MapScreen = ({ route }) => {
     })();
   }, []);
 
+  const declareEmergency = async () => {
+    const userId = await getUserId();
+    if (userId){
+    setUserId(userId);
+      try {
+        const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-declare`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            onGoingEmergency: true,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setIsEmergencyDeclared(true);
+          Alert.alert(t("emergency_declared_alert"), t("emergency_declared_alert_message"));
+        } else {
+          Alert.alert(t("error_alert"), data.message);
+        }
+      } catch (error) {
+        console.error("Failed to declare emergency", error);
+        Alert.alert(t("error_alert"), t("emergency_declared_alert_error_message"));
+      }
+    }
+  };
+
+  const sendEmergencyMessage = async (message) => {
+    const userId = await getUserId();
+    if (!userId) {
+      Alert.alert(t("error_alert"), t("user_not_difined"));
+      return;
+    }
+  
+    if (!message) {
+      Alert.alert(t("error_alert"), t("emergency_message_alert"));
+      return;
+    }
+  
+    try {
+      const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-message`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          message
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        Alert.alert(t("success_alert"), t("emergency_message_alert_success_message"));
+      } else {
+        Alert.alert(t("error_alert"), data.message);
+      }
+    } catch (error) {
+      console.error("Failed to send message", error);
+      Alert.alert(t("error_alert"), t("emergency_message_alert_error_message"));
+    }
+  };
+
+  const cancelEmergency = async (userId) => {
+    try {
+      const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-cancel`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setIsEmergencyDeclared(false);
+        Alert.alert(t("emergency_cancel_alert"), t("emergency_cancel_alert_message"));
+      } else {
+        Alert.alert(t("error_alert"), data.message);
+      }
+    } catch (error) {
+      console.error("Failed to cancel emergency", error);
+      Alert.alert(t("error_alert"), t("emergency_cancel_alert_error_message"));
+    }
+  };
+  
+
   const handleEmergencyToggle = () => {
     if (isEmergencyDeclared) {
-      // Ask user if they really want to cancel the emergency
       Alert.alert(
-        "Cancel Emergency",
-        "Are you sure you want to cancel the emergency?",
+        t("cancel_emergency_alert"),
+        t("cancel_emergency_alert_message"),
         [
           {
-            text: "No",
+            text: t("no"),
             onPress: () => console.log("Cancel Cancelled"),
             style: "cancel",
           },
           {
-            text: "Yes",
+            text: t("yes"),
             onPress: () => {
-              console.log("Emergency Cancelled");
+              cancelEmergency(userId),
               setIsEmergencyDeclared(false);
-              Alert.alert(
-                "Emergency Cancelled",
-                "Your emergency has been cancelled."
-              );
             },
           },
         ]
       );
     } else {
-      Alert.alert("Emergency Declared", "Your emergency has been declared!", [
-        { text: "OK" },
-      ]);
+      declareEmergency();
       setIsEmergencyDeclared(true);
     }
   };
 
-  //   const handleEmergencyCall = () => {
-  //     const url = `tel:${emergencyNo}`;
-  //     Linking.canOpenURL(url)
-  //       .then((supported) => {
-  //         if (!supported) {
-  //           Alert.alert("Phone call not supported");
-  //         } else {
-  //           return Linking.openURL(url);
-  //         }
-  //       })
-  //       .catch((err) => console.error('An error occurred', err));
-  //   };
-
   const handleEmergencyMessage = () => {
     Alert.prompt(
-      "Emergency Message",
-      "Describe your emergency",
+      t("message_alert"),
+      t("message_alert_message"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Send",
-          onPress: (message) => console.log("Emergency message:", message),
+          text: t("send"),
+          onPress: sendEmergencyMessage,
         },
       ],
       "plain-text"
     );
   };
 
+  const { t } = useTranslation();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Your Current Location</Text>
+      <Text style={styles.text}>{t("location_page")}</Text>
       <MapView style={styles.map} region={mapRegion}>
         {location && (
           <Marker
@@ -114,7 +184,7 @@ const MapScreen = ({ route }) => {
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
             }}
-            title={"You are here"}
+            title={t("location_title")}
           />
         )}
       </MapView>
@@ -124,19 +194,19 @@ const MapScreen = ({ route }) => {
         onPress={handleEmergencyToggle}
       >
         <Text style={styles.actionButtonText}>
-          {isEmergencyDeclared ? "Cancel Emergency" : "Declare Emergency"}
+          {isEmergencyDeclared ? t("cancel_emergency") : t("declare_emergency")}
         </Text>
       </TouchableOpacity>
       {isEmergencyDeclared && (
         <View style={styles.emergencyOptions}>
           <TouchableOpacity style={styles.optionButton}>
-            <Text style={styles.optionButtonText}>Emergency Call</Text>
+            <Text style={styles.optionButtonText}>{t("emergency_call")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.optionButton}
             onPress={handleEmergencyMessage}
           >
-            <Text style={styles.optionButtonText}>Emergency Message</Text>
+            <Text style={styles.optionButtonText}>{t("emergency_message")}</Text>
           </TouchableOpacity>
         </View>
       )}

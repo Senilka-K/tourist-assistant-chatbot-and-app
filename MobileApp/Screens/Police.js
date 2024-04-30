@@ -1,34 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import { useIsFocused } from "@react-navigation/native";
+
 import { NGROK_STATIC_DOMAIN } from '@env';
 
 const Police = () => {
   const [locations, setLocations] = useState([]);
 
-  useEffect(() => {
-    const fetchEmergencies = async () => {
-      try {
-        const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-ongoing`);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        setLocations(data.map(item => ({
-          user: `User ${item.username}`, 
-          latitude: item.location.latitude,
-          longitude: item.location.longitude,
-          dateTimeDeclared: item.dateTimeDeclared, 
-          message: item.message.join(" "),
-        })));
-        console.log(data);
-      } catch (error) {
-        console.error('Failed to fetch emergencies:', error);
+  const fetchEmergencies = async () => {
+    try {
+      const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-ongoing`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
       }
-    };
+      const data = await response.json();
+      setLocations(data.map(item => ({
+        user: `User ${item.username}`, 
+        latitude: item.location.latitude,
+        longitude: item.location.longitude,
+        dateTimeDeclared: item.dateTimeDeclared, 
+        message: item.message.join(" "),
+      })));
+      console.log(data);
+    } catch (error) {
+      console.error('Failed to fetch emergencies:', error);
+    }
+  };
 
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
     fetchEmergencies();
-  }, []);
+    const interval = setInterval(fetchEmergencies, 5000); // fetch every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [isFocused]);
 
   const [region, setRegion] = useState({
     latitude: 37.78825,

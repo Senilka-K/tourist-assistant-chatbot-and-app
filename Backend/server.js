@@ -215,7 +215,14 @@ app.put("/emergency-cancel", async (req, res) => {
 
 // Getting on going emergencies endpoint
 app.get("/emergency-ongoing", async (req, res) => {
+  const { lastPolledAt } = req.query;  // expecting a timestamp in the query
+
   try {
+    const query = {
+      onGoingEmergency: true,
+      dateTimeDeclared: { $gt: lastPolledAt }
+    };
+
     const emergencies = await Emergency.find({ onGoingEmergency: true })
       .populate({
         path: "userId",

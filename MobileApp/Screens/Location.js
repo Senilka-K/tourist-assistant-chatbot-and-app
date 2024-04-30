@@ -11,6 +11,7 @@ import {
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { getUserId } from "../UserIdStore";
+import { useIsFocused } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { NGROK_STATIC_DOMAIN } from '@env';
 
@@ -26,6 +27,7 @@ const MapScreen = ({ route }) => {
   });
 
   const [isEmergencyDeclared, setIsEmergencyDeclared] = useState(false);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     (async () => {
@@ -44,7 +46,7 @@ const MapScreen = ({ route }) => {
         longitudeDelta: 0.0421,
       });
     })();
-  }, []);
+  }, [isFocused]);
 
   const declareEmergency = async () => {
     const userId = await getUserId();
@@ -130,7 +132,6 @@ const MapScreen = ({ route }) => {
     }
   };
   
-
   const handleEmergencyToggle = () => {
     if (isEmergencyDeclared) {
       Alert.alert(

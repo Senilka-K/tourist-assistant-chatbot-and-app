@@ -27,6 +27,7 @@ const MapScreen = ({ route }) => {
   });
 
   const [isEmergencyDeclared, setIsEmergencyDeclared] = useState(false);
+  const [emergencyNumber, setEmergencyNumber] = useState('');
   const isFocused = useIsFocused();
 
   useEffect(() => {
@@ -111,6 +112,34 @@ const MapScreen = ({ route }) => {
       Alert.alert(t("error_alert"), t("emergency_message_alert_error_message"));
     }
   };
+
+  const handleEmergencyCall = async () => {
+    try {
+      const userId = await getUserId(); // Assuming getUserId() correctly retrieves the current user's ID
+      if (!userId) {
+        Alert.alert(t("error_alert"), t("userId_error_message"));
+        return;
+      }
+      
+      const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        const emergencyNo = data.emergencyNo;
+        Linking.openURL(`tel:${emergencyNo}`)
+          .catch(err => console.error('An error occurred trying to launch phone dialer', err));
+      } else {
+        Alert.alert(t("error_alert"), t("no_emergency_number_available"));
+      }
+    } catch (error) {
+      console.error("Failed to fetch emergency number", error);
+      Alert.alert(t("error_alert"), t("network_error"));
+    }
+  };
+  
 
   const cancelEmergency = async (userId) => {
     try {
@@ -200,7 +229,7 @@ const MapScreen = ({ route }) => {
       </TouchableOpacity>
       {isEmergencyDeclared && (
         <View style={styles.emergencyOptions}>
-          <TouchableOpacity style={styles.optionButton}>
+          <TouchableOpacity style={styles.optionButton} onPress={handleEmergencyCall}>
             <Text style={styles.optionButtonText}>{t("emergency_call")}</Text>
           </TouchableOpacity>
           <TouchableOpacity

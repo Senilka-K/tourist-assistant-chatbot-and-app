@@ -249,6 +249,24 @@ app.get("/emergency-ongoing", async (req, res) => {
   }
 });
 
+// Emergency call endpoint
+app.post('/emergency-call', async (req, res) => {
+  const { userId } = req.body;
+  try {
+    const userDetails = await FormDetails.findOne({ userId: userId });
+    if (!userDetails) {
+      console.log("No user found with the given userId");
+      return res.status(404).json("User not found");
+    }
+    console.log(userDetails.emergencyNo);
+    res.json({ emergencyNo: userDetails.emergencyNo });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json(error);
+  }
+});
+
+
 // Listen on a port
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

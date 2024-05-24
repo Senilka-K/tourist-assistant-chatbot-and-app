@@ -5,14 +5,15 @@ const cors = require("cors");
 const User = require("./Models/Users");
 const FormDetails = require("./Models/FormDetails");
 const Emergency = require("./Models/Emergency");
-const openai = require('openai-api');
+// const openai = require('openai');
+const OpenAI = require('openai');
 
 require('dotenv').config();
 
 const app = express();
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const openAI = new openai(OPENAI_API_KEY);
+// const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// const openAI = new openai(OPENAI_API_KEY);
 let languageCode = null;
 let history = [];
 
@@ -28,41 +29,48 @@ mongoose
   .then(() => console.log("Connected to MongoDB Atlas"))
   .catch((err) => console.error("Error connecting to MongoDB Atlas:", err));
 
-// ChatBot
+const openai = new OpenAI();
+
 const detectLanguage = async (query) => {
-  try {
-      const response = await openAI.complete({
-          engine: 'gpt-3.5-turbo',
-          prompt: query,
-          maxTokens: 2
-      });
-      const language = response.choices[0].text.trim();
-      return language;
-  } catch (error) {
-      console.error('Error detecting language:', error);
+  try{
+    console.log(query);
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: "Return the ISO 639-1 alpha 2 language code only. Answer must only have 2 characters." },
+        { role: "user", content: query}
+      ]});
+    // console.log(completion.choices[0].message.content);  
+    return completion.choices[0].message.content;
+  }
+  catch (e){
+    console.error(e);
   }
 };
 
 const handleTouristQueryWithContext = async (query, languageCode) => {
   const context = history.join('|');
-  let systemPrompt = `You are an insightful tourist assistant based in Sri Lanka. You must answer in ${languageCode}.`;
+  let systemPrompt = `You are an insightful tourist assistant based in Sri Lanka. You must answer in ${languageCode} which is an ISO 639-1 alpha 2 language code.`;
   if (history.length > 0) {
       systemPrompt += ` No greetings required. Recent questions: ${context}.`;
   }
+  console.log(systemPrompt);
 
   try {
-      const response = await openAI.complete({
-          engine: 'gpt-3.5-turbo',
-          prompt: `${systemPrompt}\n${query}`,
-          maxTokens: 150
-      });
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: systemPrompt},
+        { role: "user", content: query}
+      ]});
 
-      const answer = response.choices[0].text.trim();
+      const answer = response.choices[0].message.content;
       history.push(query);
       if (history.length > 3) {
           history = history.slice(-3);
       }
       return answer;
+
   } catch (error) {
       console.error('Error handling query:', error);
   }
@@ -316,10 +324,14 @@ app.post('/emergency-call', async (req, res) => {
 app.post('/chat', async (req, res) => {
   const userInput = req.body;
   console.log('Message received:', userInput);
+  // const c = await chat();
   if (!languageCode) {
-      languageCode = await detectLanguage(userInput);
+      languageCode = await detectLanguage(userInput.message);
   }
-  const response = await handleTouristQueryWithContext(userInput, languageCode);
+  console.log(languageCode);
+  const response = await handleTouristQueryWithContext(userInput.message, languageCode);
+  console.log(response);
+  console.log(history.join('|'));
   res.json({ text: response, user: { _id: 2, name: 'Server' } });
 });
 // app.post('/chat', (req, res) => {

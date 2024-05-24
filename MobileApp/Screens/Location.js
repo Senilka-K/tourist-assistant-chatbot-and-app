@@ -11,6 +11,7 @@ import {
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { getUserId } from "../UserIdStore";
+import { useIsFocused } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { NGROK_STATIC_DOMAIN } from '@env';
 
@@ -26,6 +27,8 @@ const MapScreen = ({ route }) => {
   });
 
   const [isEmergencyDeclared, setIsEmergencyDeclared] = useState(false);
+  const [emergencyNumber, setEmergencyNumber] = useState('');
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     (async () => {
@@ -44,7 +47,7 @@ const MapScreen = ({ route }) => {
         longitudeDelta: 0.0421,
       });
     })();
-  }, []);
+  }, [isFocused]);
 
   const declareEmergency = async () => {
     const userId = await getUserId();
@@ -110,6 +113,34 @@ const MapScreen = ({ route }) => {
     }
   };
 
+  const handleEmergencyCall = async () => {
+    try {
+      const userId = await getUserId(); // Assuming getUserId() correctly retrieves the current user's ID
+      if (!userId) {
+        Alert.alert(t("error_alert"), t("userId_error_message"));
+        return;
+      }
+      
+      const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        const emergencyNo = data.emergencyNo;
+        Linking.openURL(`tel:${emergencyNo}`)
+          .catch(err => console.error('An error occurred trying to launch phone dialer', err));
+      } else {
+        Alert.alert(t("error_alert"), t("no_emergency_number_available"));
+      }
+    } catch (error) {
+      console.error("Failed to fetch emergency number", error);
+      Alert.alert(t("error_alert"), t("network_error"));
+    }
+  };
+  
+
   const cancelEmergency = async (userId) => {
     try {
       const response = await fetch(`${NGROK_STATIC_DOMAIN}/emergency-cancel`, {
@@ -130,7 +161,6 @@ const MapScreen = ({ route }) => {
     }
   };
   
-
   const handleEmergencyToggle = () => {
     if (isEmergencyDeclared) {
       Alert.alert(
@@ -199,7 +229,7 @@ const MapScreen = ({ route }) => {
       </TouchableOpacity>
       {isEmergencyDeclared && (
         <View style={styles.emergencyOptions}>
-          <TouchableOpacity style={styles.optionButton}>
+          <TouchableOpacity style={styles.optionButton} onPress={handleEmergencyCall}>
             <Text style={styles.optionButtonText}>{t("emergency_call")}</Text>
           </TouchableOpacity>
           <TouchableOpacity

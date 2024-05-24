@@ -5,10 +5,16 @@ const cors = require("cors");
 const User = require("./Models/Users");
 const FormDetails = require("./Models/FormDetails");
 const Emergency = require("./Models/Emergency");
+const openai = require('openai-api');
 
 require('dotenv').config();
 
 const app = express();
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const openAI = new openai(OPENAI_API_KEY);
+let languageCode = null;
+let history = [];
 
 // Middleware
 app.use(bodyParser.json());
@@ -21,6 +27,46 @@ mongoose
   })
   .then(() => console.log("Connected to MongoDB Atlas"))
   .catch((err) => console.error("Error connecting to MongoDB Atlas:", err));
+
+// ChatBot
+const detectLanguage = async (query) => {
+  try {
+      const response = await openAI.complete({
+          engine: 'gpt-3.5-turbo',
+          prompt: query,
+          maxTokens: 2
+      });
+      const language = response.choices[0].text.trim();
+      return language;
+  } catch (error) {
+      console.error('Error detecting language:', error);
+  }
+};
+
+const handleTouristQueryWithContext = async (query, languageCode) => {
+  const context = history.join('|');
+  let systemPrompt = `You are an insightful tourist assistant based in Sri Lanka. You must answer in ${languageCode}.`;
+  if (history.length > 0) {
+      systemPrompt += ` No greetings required. Recent questions: ${context}.`;
+  }
+
+  try {
+      const response = await openAI.complete({
+          engine: 'gpt-3.5-turbo',
+          prompt: `${systemPrompt}\n${query}`,
+          maxTokens: 150
+      });
+
+      const answer = response.choices[0].text.trim();
+      history.push(query);
+      if (history.length > 3) {
+          history = history.slice(-3);
+      }
+      return answer;
+  } catch (error) {
+      console.error('Error handling query:', error);
+  }
+};
 
 // User login endpoint
 app.post("/login", async (req, res) => {
@@ -215,7 +261,14 @@ app.put("/emergency-cancel", async (req, res) => {
 
 // Getting on going emergencies endpoint
 app.get("/emergency-ongoing", async (req, res) => {
+  const { lastPolledAt } = req.query;  // expecting a timestamp in the query
+
   try {
+    const query = {
+      onGoingEmergency: true,
+      dateTimeDeclared: { $gt: lastPolledAt }
+    };
+
     const emergencies = await Emergency.find({ onGoingEmergency: true })
       .populate({
         path: "userId",
@@ -241,6 +294,38 @@ app.get("/emergency-ongoing", async (req, res) => {
       });
   }
 });
+
+// Emergency call endpoint
+app.post('/emergency-call', async (req, res) => {
+  const { userId } = req.body;
+  try {
+    const userDetails = await FormDetails.findOne({ userId: userId });
+    if (!userDetails) {
+      console.log("No user found with the given userId");
+      return res.status(404).json("User not found");
+    }
+    console.log(userDetails.emergencyNo);
+    res.json({ emergencyNo: userDetails.emergencyNo });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json(error);
+  }
+});
+
+// Chat endpoint
+app.post('/chat', async (req, res) => {
+  const userInput = req.body;
+  console.log('Message received:', userInput);
+  if (!languageCode) {
+      languageCode = await detectLanguage(userInput);
+  }
+  const response = await handleTouristQueryWithContext(userInput, languageCode);
+  res.json({ text: response, user: { _id: 2, name: 'Server' } });
+});
+// app.post('/chat', (req, res) => {
+//   console.log('Message received:', req.body.message); // Log the received message
+//   res.json({ text: 'How can I help you?', user: { _id: 2, name: 'Server' } }); // Respond with "bye"
+// });
 
 // Listen on a port
 const PORT = process.env.PORT || 5000;

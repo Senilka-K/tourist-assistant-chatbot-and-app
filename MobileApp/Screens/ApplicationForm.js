@@ -68,6 +68,14 @@ export default function ApplicationForm() {
             setIsEditable(false);
             console.log("done");
           } else {
+            setName("");
+            setArriveDate("");
+            setDistrict("");
+            setContactNo("");
+            setPassportId("");
+            setEmergencyNo("");
+            setComment("");
+            setLikesTracking(null);
             setIsFormFilled(false);
             setIsEditable(true);
           }

@@ -33,7 +33,7 @@ const openai = new OpenAI();
 
 const detectLanguage = async (query) => {
   try{
-    console.log(query);
+    // console.log(query);
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
@@ -54,8 +54,6 @@ const handleTouristQueryWithContext = async (query, languageCode) => {
   if (history.length > 0) {
       systemPrompt += ` No greetings required. Recent questions: ${context}.`;
   }
-  console.log(systemPrompt);
-
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
@@ -323,21 +321,22 @@ app.post('/emergency-call', async (req, res) => {
 // Chat endpoint
 app.post('/chat', async (req, res) => {
   const userInput = req.body;
-  console.log('Message received:', userInput);
-  // const c = await chat();
+  // console.log('Message received:', userInput);
   if (!languageCode) {
       languageCode = await detectLanguage(userInput.message);
   }
-  console.log(languageCode);
+  // console.log(languageCode);
   const response = await handleTouristQueryWithContext(userInput.message, languageCode);
-  console.log(response);
   console.log(history.join('|'));
-  res.json({ text: response, user: { _id: 2, name: 'Server' } });
+  console.log(response);
+  res.json({ text: response, user: { _id: 2, name: 'Assistant' } });
 });
-// app.post('/chat', (req, res) => {
-//   console.log('Message received:', req.body.message); // Log the received message
-//   res.json({ text: 'How can I help you?', user: { _id: 2, name: 'Server' } }); // Respond with "bye"
-// });
+
+app.get('/language', async (req, res) => {
+  if (languageCode) {
+    res.status(200).json(languageCode);
+  }
+})
 
 // Listen on a port
 const PORT = process.env.PORT || 5000;

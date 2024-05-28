@@ -35,12 +35,12 @@ const detectLanguage = async (query) => {
   try{
     // console.log(query);
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         { role: "system", content: "Return the ISO 639-1 alpha 2 language code only. Answer must only have 2 characters." },
         { role: "user", content: query}
       ]});
-    // console.log(completion.choices[0].message.content);  
+    console.log(completion.choices[0].message.content);  
     return completion.choices[0].message.content;
   }
   catch (e){

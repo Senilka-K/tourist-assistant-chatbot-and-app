@@ -64,6 +64,8 @@
     "application": "Solicitud",
     "emergency": "Emergencia",
     "police": "Policía",
-    "chat": "Chat",
-    "settings": "Configuración"
+    "chat": "Charlar",
+    "settings": "Configuración",
+    "no_emergency_number_available": "No hay número de emergencia disponible",
+    "network_error": "Error de red"
 }

@@ -22,7 +22,6 @@ const Police = () => {
         dateTimeDeclared: item.dateTimeDeclared, 
         message: item.message.join(" "),
       })));
-      console.log(data);
     } catch (error) {
       console.error('Failed to fetch emergencies:', error);
     }

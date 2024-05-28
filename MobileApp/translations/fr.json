@@ -64,6 +64,8 @@
     "application": "Demande",
     "emergency": "Urgence",
     "police": "Police",
-    "chat": "Chat",
-    "settings": "Paramètres"
+    "chat": "Chatte",
+    "settings": "Paramètres",
+    "no_emergency_number_available": "Aucun numéro d'urgence disponible",
+    "network_error": "Erreur réseau"
 }

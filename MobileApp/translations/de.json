@@ -64,6 +64,8 @@
     "application": "Antrag",
     "emergency": "Notfall",
     "police": "Polizei",
-    "chat": "Chat",
-    "settings": "Einstellungen"
+    "chat": "Plaudern",
+    "settings": "Einstellungen",
+    "no_emergency_number_available": "Keine Notrufnummer verfügbar",
+    "network_error": "Netzwerkfehler"
 }

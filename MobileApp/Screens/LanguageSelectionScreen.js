@@ -8,7 +8,7 @@ const languages = [
     { code: 'fr', label: 'French' },
     { code: 'es', label: 'Spanish' },
     { code: 'de', label: 'German' },
-    { code: 'zh', label: 'Chinese' }
+    { code: 'it', label: 'Italian' }
 ];
 
 const LanguageSelectionScreen = () => {

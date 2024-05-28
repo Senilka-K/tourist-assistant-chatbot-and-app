@@ -38,7 +38,7 @@ const ChatBot = () => {
     setMessages([
       {
         _id: 1,
-        text: 'Hello! Welcome! How are you?',
+        text: "Welcome! How are you? How can I help you? \n\n Accueillir! Comment vas-tu? Comment puis-je t'aider? \n\n ¡Bienvenido! ¿Cómo estás? ¿Le puedo ayudar en algo? \n\n Willkommen! Wie geht es dir? Wie kann ich dir helfen? \n\n Benvenuto! Come stai? Come posso aiutarla?",
         createdAt: new Date(),
         user: {
           _id: 2,

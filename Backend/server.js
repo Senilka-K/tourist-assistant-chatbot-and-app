@@ -5,17 +5,15 @@ const cors = require("cors");
 const User = require("./Models/Users");
 const FormDetails = require("./Models/FormDetails");
 const Emergency = require("./Models/Emergency");
-// const openai = require('openai');
 const OpenAI = require('openai');
 
 require('dotenv').config();
 
 const app = express();
 
-// const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-// const openAI = new openai(OPENAI_API_KEY);
 let languageCode = null;
 let history = [];
+let messagesHistory = [];
 
 // Middleware
 app.use(bodyParser.json());
@@ -33,7 +31,6 @@ const openai = new OpenAI();
 
 const detectLanguage = async (query) => {
   try{
-    // console.log(query);
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
@@ -321,22 +318,63 @@ app.post('/emergency-call', async (req, res) => {
 // Chat endpoint
 app.post('/chat', async (req, res) => {
   const userInput = req.body;
-  // console.log('Message received:', userInput);
   if (!languageCode) {
       languageCode = await detectLanguage(userInput.message);
   }
-  // console.log(languageCode);
   const response = await handleTouristQueryWithContext(userInput.message, languageCode);
   console.log(history.join('|'));
   console.log(response);
+  if (messagesHistory.length < 2) {
+    messagesHistory.push({
+      text: userInput.message,
+      user: { _id: 1, name: 'User' },
+      createdAt: new Date()
+    });
+
+    messagesHistory.push({
+      text: response,
+      user: { _id: 2, name: 'Assistant' },
+      createdAt: new Date()
+    });
+  }
   res.json({ text: response, user: { _id: 2, name: 'Assistant' } });
 });
 
+// Language-Change endpoint
 app.get('/language', async (req, res) => {
   if (languageCode) {
-    res.status(200).json(languageCode);
+    res.status(200).json(languageCode)
+  }
+  else{
+    res.status(404).json({ error: "Language code not set" });
   }
 })
+
+// Endpoint to save messages
+app.post('/save-messages', (req, res) => {
+  if (!req.body.messages) {
+    return res.status(400).json({ error: 'Missing messages in the request body' });
+  }
+  if (!Array.isArray(req.body.messages)) {
+    return res.status(400).json({ error: 'messages must be an array' });
+  }
+  const isValid = req.body.messages.every(msg => msg._id && msg.text && msg.user);
+  if (!isValid) {
+    return res.status(400).json({ error: 'Each message must have an _id, text, and user' });
+  }
+  res.status(200).json({ message: 'Messages saved successfully' });
+  console.log('Messages saved successfully');
+});
+
+// Endpoint to load messages
+app.get('/load-messages', (req, res) => {
+  if (messagesHistory.length === 0) {
+    res.status(404).json({ error: "No messages found" });
+    console.log(error);
+  } else {
+    res.status(200).json(messagesHistory.slice(0, 4));
+  }
+});
 
 // Listen on a port
 const PORT = process.env.PORT || 5000;

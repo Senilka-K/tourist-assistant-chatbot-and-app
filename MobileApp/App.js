@@ -72,7 +72,7 @@ export default function App() {
             }}
           />
           <Tab.Screen
-            name={t("chat")}
+            name={t("chat")}r
             component={ChatBot}
             options={{
               tabBarLabel: t("chat"),

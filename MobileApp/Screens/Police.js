@@ -64,12 +64,22 @@ const Police = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Emergency Locations</Text>
-      <MapView style={styles.map} region={region}>
+      {/* <MapView style={styles.map} region={region}>
         {locations.map((loc) => (
           <Marker
             key={loc.id}
             coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
             title={`Emergency at Location ${loc.id}`}
+            description={loc.description}
+          />
+        ))}
+      </MapView> */}
+      <MapView style={styles.map} region={region}>
+        {locations.map((loc, index) => (
+          <Marker
+            key={`${loc.latitude}-${loc.longitude}`} // Using a combination of latitude and longitude as a key
+            coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
+            title={`Emergency at Location ${index}`}
             description={loc.description}
           />
         ))}

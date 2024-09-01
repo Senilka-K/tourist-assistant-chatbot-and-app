@@ -6,6 +6,8 @@ const User = require("./Models/Users");
 const FormDetails = require("./Models/FormDetails");
 const Emergency = require("./Models/Emergency");
 const OpenAI = require('openai');
+const fs = require("fs");
+const multer = require('multer');
 
 require('dotenv').config();
 
@@ -70,6 +72,33 @@ const handleTouristQueryWithContext = async (query, languageCode) => {
       console.error('Error handling query:', error);
   }
 };
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/')  // Save files in the 'uploads' directory
+  },
+  filename: function (req, file, cb) {
+    // Rename the file to include the timestamp (to avoid name conflicts)
+    cb(null, file.originalname)
+  }
+});
+const upload = multer({ storage: storage });
+
+app.post('/transcribe', upload.single('audioFile'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+  try {
+    const transcription = await openai.audio.transcriptions.create({
+      file: fs.createReadStream('uploads/recording.m4a'),
+      model: "whisper-1",
+      response_format: "text",
+    });
+    console.log(transcription);
+    return res.status(200).json({"Result": transcription});
+  } catch (error) {
+  console.error('Error while transcribing:', error);
+}});
 
 // User login endpoint
 app.post("/login", async (req, res) => {
@@ -377,5 +406,5 @@ app.get('/load-messages', (req, res) => {
 });
 
 // Listen on a port
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5060;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

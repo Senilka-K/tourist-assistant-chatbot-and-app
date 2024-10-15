@@ -34,7 +34,7 @@ const openai = new OpenAI();
 const detectLanguage = async (query) => {
   try{
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "Return the ISO 639-1 alpha 2 language code only. Answer must only have 2 characters." },
         { role: "user", content: query}
@@ -55,7 +55,7 @@ const handleTouristQueryWithContext = async (query, languageCode) => {
   }
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt},
         { role: "user", content: query}
@@ -293,14 +293,7 @@ app.put("/emergency-cancel", async (req, res) => {
 
 // Getting on going emergencies endpoint
 app.get("/emergency-ongoing", async (req, res) => {
-  const { lastPolledAt } = req.query;  // expecting a timestamp in the query
-
   try {
-    const query = {
-      onGoingEmergency: true,
-      dateTimeDeclared: { $gt: lastPolledAt }
-    };
-
     const emergencies = await Emergency.find({ onGoingEmergency: true })
       .populate({
         path: "userId",
